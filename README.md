@@ -19,7 +19,7 @@ dollar, so the refund is arithmetic.
 ![USDC is the gas](https://img.shields.io/badge/gas-native_USDC-A4471A?style=flat)
 ![Solidity 0.8.30](https://img.shields.io/badge/Solidity-0.8.30_osaka-363636?style=flat)
 ![Foundry](https://img.shields.io/badge/Foundry-42_tests-1E6F48?style=flat)
-![vitest](https://img.shields.io/badge/vitest-34_tests-1E6F48?style=flat)
+![vitest](https://img.shields.io/badge/vitest-32_tests-1E6F48?style=flat)
 ![viem](https://img.shields.io/badge/viem-2.x-1C1A16?style=flat)
 ![bench](https://img.shields.io/badge/bench-30%2F30_drift_0-1E6F48?style=flat)
 ![license](https://img.shields.io/badge/license-MIT-blue?style=flat)
@@ -30,10 +30,12 @@ dollar, so the refund is arithmetic.
 
 ## 1 · The receipt
 
-<div align="center"><img src="docs/assets/receipt-order-5.png" alt="The receipt the page shows after Execute: payee received 0.001 USDC; executor refunded +0.001168 USDC (58415 gas metered × 20 Gwei); executor tipped +0.001; real fee paid −0.001168 (receipt.gasUsed 58415 × effectiveGasPrice 20 Gwei); executor net +0.001, drift 0 gas, refund ÷ fee 1.000000" width="530"></div>
+<div align="center"><img src="docs/assets/receipt-order-5.png" alt="The receipt the page shows after Execute: payee received 0.001 USDC; executor refunded +0.001168 USDC (58415 gas metered × 20 Gwei); executor tipped +0.001; real fee paid −0.001168 (receipt.gasUsed 58415 × effectiveGasPrice 20 Gwei); executor net +0.001, drift 0 gas, refund ÷ fee 1.000000" width="760"></div>
 
 That is order #5 on Arc mainnet, created from the page's form and run from its **Execute** button
-([`0x2f6a352d…0c95`](https://explorer.arc.io/tx/0x2f6a352d11823a37ad085151067856131833ef978445fbed5941e7d17b5b0c95)) — the second of the two
+([`0x2f6a352d…0c95`](https://explorer.arc.io/tx/0x2f6a352d11823a37ad085151067856131833ef978445fbed5941e7d17b5b0c95)) — the page renders it at
+[`#/o/5/tx/0x2f6a…`](https://edycutjong.github.io/legwork-arc/#/o/5/tx/0x2f6a352d11823a37ad085151067856131833ef978445fbed5941e7d17b5b0c95) from the chain,
+although the order itself has since been cancelled. It is the second of the two
 page-driven orders; the first, #4 ([`0xf71fffd0…7154`](https://explorer.arc.io/tx/0xf71fffd0f3dee7e43f9df1ba87bc7f954e97d29d42a59435ead45485b5dd7154)), read the same to the wei.
 Two of the five lines come from the contract's own event; one comes from the transaction receipt and nowhere else.
 They agree to the wei. `gasUsed` 58,415 on the receipt; `gasMetered` 58,415 in the event; drift 0.
@@ -49,6 +51,10 @@ read the receipt. The payee gets 0.02 USDC; you get the metered gas back plus a 
 base fee) → the card opens *Due* → **Execute**. Reading the page needs no wallet at all; signing uses the injected one and
 offers to add Arc (chain 5042) if it is missing. Prerequisite: USDC on Arc — bringing it from another chain is Circle's bridge, not this project.
 
+**Who this is for:** anyone who pays the same address on a schedule in USDC — retainers, payroll, subscriptions, DCA into a
+vault — and does not want to run a cron box holding a hot key and a second gas token to do it; and payees, who can be their own
+executor and collect on the tick (five of the thirty bench rows are exactly that).
+
 ## 3 · Numbers
 
 | | |
@@ -56,7 +62,7 @@ offers to add Arc (chain 5042) if it is missing. Prerequisite: USDC on Arc — b
 | Contract | [`0x8E2F8AFC29e9dc127103CD6AD5BCfBe661141ccb`](https://explorer.arc.io/address/0x8E2F8AFC29e9dc127103CD6AD5BCfBe661141ccb) on Arc mainnet (5042) · `OVERHEAD = 32503` gas, calibrated on-chain (three runs, drift 1,103 on all three, spread 0); v2 of the contract — v1 and the calibration deploy are kept in the record (§8) |
 | Bench | **30 real executes**, one order, 1-second periods: `gasUsed` p50 **58,415** · p95 **58,415** · **drift 0 on every row** (gate ≤ 50) · **refund ÷ real fee = 1.000000** on every row (pre-stated: 1.00 ± 0.02) · executor net after tip = exactly the tip · 25 rows by the payer wallet, 5 by **the payee collecting its own payment** |
 | Cost of a run | 58,415 gas ≈ **0.00117 USDC** at Arc's 20 Gwei base fee; a refused payment costs 60,565; a `NotDue` revert 24,323 |
-| Tests | **42 Foundry** cases (34 unit · 2 fuzz suites × 512 runs · 6 invariants × 64 runs) · **34 vitest** cases; the receipt decoder's fixtures are committed mainnet receipts |
+| Tests | **42 Foundry** cases (34 unit · 2 fuzz suites × 512 runs · 6 invariants × 64 runs) · **32 vitest** cases; the receipt decoder's fixtures are committed mainnet receipts |
 | Recheck | `npm run recheck` recomputes all 75 committed execute receipts (36 on v2, 36 on the retired v1, 3 calibration) from raw data (six equalities per row, incl. `price == min(effectiveGasPrice, 2·basefee, maxGasPrice)`) — `all checks passed` |
 | Proof | [`DEMO.md`](./DEMO.md): one mainnet transaction per edge case, the bench table, the calibration table, reproduce commands; 107 receipts under [`proof/receipts/`](./proof/receipts/) |
 
@@ -179,7 +185,7 @@ modifier is where the two would meet.
 ```
 contracts/Legwork.sol         the contract (212 lines) · contracts/Rejector.sol  the refusing demo payee
 test/Legwork.t.sol            34 unit + 2 fuzz · test/Legwork.invariants.t.sol  6 invariants with a handler
-test/ts/                      34 vitest cases over the committed receipts
+test/ts/                      32 vitest cases over the committed receipts
 src/lib/                      order arithmetic · receipt decoding · two-ended bounded scan (pure, tested)
 src/app/                      the page: rpc reads · wallet writes · two views
 scripts/orders.ts             seed + first runs (+ --not-due) · scripts/meter-bench.ts  the bench · scripts/recheck-receipts.ts  the verdict

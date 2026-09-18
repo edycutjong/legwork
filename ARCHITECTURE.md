@@ -35,7 +35,7 @@ measurement point on both branches), `Paused(id, executor, reason)` (emitted *be
 metered), `Resumed`, `ToppedUp`, `Cancelled`. Errors: `NoOrder NotPayer IsPaused NotDue(nextDue) Underfunded(have, need)
 BadParams Reentrant PayoutFailed`.
 
-### `execute`, line by line (lines 132–170)
+### `execute`, line by line (lines 132–171)
 
 ```
 1   uint256 g0 = gasleft();                                   // first statement of the function
@@ -74,7 +74,7 @@ and −6 on the paused branch (the taken jump and the `paid = false` word) — o
 | I6 | One period per execute; same-second second call reverts `NotDue` | `invariant_I6_onePeriodPerExecute`, `test_execute_sameTimestamp…`, `test_execute_missedPeriods…`; mainnet `NotDue` receipt |
 | I7 | The clamp never binds for a benign payee; deposit never underflows | `invariant_I7_clampNeverBindsForBenignPayee`, fuzz; `recheck` (4) |
 
-42 Foundry cases (34 unit, 2 fuzz × 512 runs, 6 invariants × 64 runs × depth 32) · 34 vitest cases (the receipt decoder's fixtures are committed mainnet receipts).
+42 Foundry cases (34 unit, 2 fuzz × 512 runs, 6 invariants × 64 runs × depth 32) · 32 vitest cases (the receipt decoder's fixtures are committed mainnet receipts).
 
 ## Residual risk — adversary → bound → check
 

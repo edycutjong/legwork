@@ -13,6 +13,7 @@ export function injected(): Eip1193 | undefined {
 export type Wallet = { address: `0x${string}`; client: WalletClient };
 
 let current: Wallet | undefined;
+let subscribed = false; // provider events are registered once, however many times connect() runs
 const listeners = new Set<(w: Wallet | undefined) => void>();
 
 export function onWallet(f: (w: Wallet | undefined) => void) {
@@ -37,8 +38,11 @@ export async function connect(): Promise<Wallet> {
   const client = createWalletClient({ account: address, chain: arc, transport: custom(p as any) });
   const w = { address, client };
   set(w);
-  p.on?.('accountsChanged', (a: string[]) => (a[0] ? set({ address: a[0] as `0x${string}`, client: createWalletClient({ account: a[0] as `0x${string}`, chain: arc, transport: custom(p as any) }) }) : set(undefined)));
-  p.on?.('chainChanged', () => window.location.reload());
+  if (!subscribed) {
+    subscribed = true;
+    p.on?.('accountsChanged', (a: string[]) => (a[0] ? set({ address: a[0] as `0x${string}`, client: createWalletClient({ account: a[0] as `0x${string}`, chain: arc, transport: custom(p as any) }) }) : set(undefined)));
+    p.on?.('chainChanged', () => window.location.reload());
+  }
   return w;
 }
 

@@ -10,7 +10,8 @@ export const CONTRACT = deploy.contract.address as `0x${string}`;
 export const OVERHEAD = deploy.contract.overhead;
 export const DEPLOY = deploy;
 
-export const client = createPublicClient({ chain: arc, transport: http(RPC_URL, { batch: false }) });
+// ccipRead off: the page must never fetch anything but the RPC (an OffchainLookup revert would otherwise call out)
+export const client = createPublicClient({ chain: arc, transport: http(RPC_URL, { batch: false }), ccipRead: false });
 
 export async function chainOk(): Promise<boolean> {
   try { return (await client.getChainId()) === 5042; } catch { return false; }
@@ -96,9 +97,9 @@ async function orderLogs(id: bigint, fromBlock: bigint, toBlock: bigint): Promis
   return out;
 }
 
-/** Bounded two-ended history for one order: `maxChunks` × ≤ 9,000 blocks from the head and from createdBlock, 250 ms apart. */
+/** Bounded two-ended history for one order: `maxChunks` × ≤ 9,000 blocks from the head and from createdBlock, ≥ 400 ms apart. */
 export async function scanHistory(id: bigint, state: ScanState, maxChunks = CHUNKS_ON_OPEN) {
-  return scanBounded<OrderEvent>(state, (w) => orderLogs(id, w.fromBlock, w.toBlock), maxChunks, undefined, 250);
+  return scanBounded<OrderEvent>(state, (w) => orderLogs(id, w.fromBlock, w.toBlock), maxChunks, undefined, 400);
 }
 
 export const startScan = (headNumber: bigint, createdBlock: bigint) => initialScan(headNumber, createdBlock);

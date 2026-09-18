@@ -13,19 +13,6 @@ export const CHUNKS_ON_OPEN = 8;
 
 export type Window = { fromBlock: bigint; toBlock: bigint };
 
-/** Successive windows walking back from `head` to `floor` (inclusive), each ≤ CHUNK blocks. */
-export function windowsBackward(head: bigint, floor: bigint, chunk = CHUNK): Window[] {
-  const out: Window[] = [];
-  let to = head;
-  while (to >= floor) {
-    const from = to - chunk + 1n > floor ? to - chunk + 1n : floor;
-    out.push({ fromBlock: from, toBlock: to });
-    if (from === floor) break;
-    to = from - 1n;
-  }
-  return out;
-}
-
 /**
  * `hi` is the next block to read on the newest side (walking down), `lo` the next on the oldest side (walking up);
  * the blocks strictly between them are unread. `head` and `floor` are kept so the page can say what was covered.
@@ -76,6 +63,7 @@ export const initialScan = (head: bigint, createdBlock: bigint): ScanState => ({
 
 /** Human-readable coverage: the two read ranges, or "everything". */
 export function coverage(s: ScanState): { newest?: Window; oldest?: Window; all: boolean } {
+  if (s.head < s.floor) return { all: false }; // nothing could be read: the head lags the creation block
   if (s.exhausted) return { all: true };
   return {
     newest: s.hi < s.head ? { fromBlock: s.hi + 1n, toBlock: s.head } : undefined,

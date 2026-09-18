@@ -1,19 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { CHUNK, coverage, initialScan, scanBounded, windowsBackward } from '../../src/lib/scan';
+import { CHUNK, coverage, initialScan, scanBounded } from '../../src/lib/scan';
 
-describe('windowsBackward', () => {
-  it('walks back from the head in ≤ CHUNK-block windows and stops at the floor', () => {
-    const w = windowsBackward(100_000n, 80_500n, 9_000n);
-    expect(w[0]).toEqual({ fromBlock: 91_001n, toBlock: 100_000n });
-    expect(w[1]).toEqual({ fromBlock: 82_001n, toBlock: 91_000n });
-    expect(w[2]).toEqual({ fromBlock: 80_500n, toBlock: 82_000n });
-    expect(w).toHaveLength(3);
-    for (const x of w) expect(x.toBlock - x.fromBlock + 1n <= 9_000n).toBe(true);
-  });
-  it('a single window when the order is younger than one chunk', () => {
-    expect(windowsBackward(50n, 40n)).toEqual([{ fromBlock: 40n, toBlock: 50n }]);
-  });
-  it('the default chunk is under the RPC limit of 10,000', () => {
+describe('CHUNK', () => {
+  it('is under the RPC limit of 10,000 blocks', () => {
     expect(CHUNK < 10_000n).toBe(true);
   });
 });
@@ -45,13 +34,15 @@ describe('scanBounded', () => {
     const second = await scanBounded(first.state, fetch, 8, 9_000n);
     expect(second.state.exhausted).toBe(true);
     expect(calls).toHaveLength(12);
-    // every block from created to head read exactly once
-    const covered = calls.map(([a, b]) => b - a + 1n).reduce((x, y) => x + y, 0n);
-    expect(covered).toBe(head - created + 1n);
-    for (const [a, b] of calls) { expect(a >= created).toBe(true); expect(b <= head).toBe(true); expect(b - a + 1n <= 9_000n).toBe(true); }
+    // every block from created to head read exactly once: the windows, sorted, are contiguous and disjoint
+    const sorted = [...calls].sort((x, y) => (x[0] < y[0] ? -1 : 1));
+    expect(sorted[0][0]).toBe(created);
+    expect(sorted.at(-1)![1]).toBe(head);
+    for (let i = 1; i < sorted.length; i++) expect(sorted[i][0]).toBe(sorted[i - 1][1] + 1n);
+    for (const [a, b] of calls) expect(b - a + 1n <= 9_000n).toBe(true);
   });
-  it('a run made yesterday and the first run on creation day both surface in the eight windows on open', async () => {
-    const head = 21_555_269n, created = 21_493_738n; // order #1, 2026-09-18 20:32 UTC — 61,531 blocks apart
+  it('a run made just now and the first run on creation day both surface in the first two windows', async () => {
+    const head = 21_555_269n, created = 21_493_738n; // order #1 (created 11:52 UTC 2026-09-18) seen from the head at 20:32 UTC — 61,531 blocks apart
     const hits = [created + 3n, head - 40n]; // first run · a reviewer's run
     const fetch = async (w: { fromBlock: bigint; toBlock: bigint }) => hits.filter((b) => b >= w.fromBlock && b <= w.toBlock);
     const r = await scanBounded(initialScan(head, created), fetch, 2, 9_000n);
@@ -61,12 +52,12 @@ describe('scanBounded', () => {
     expect(cov.newest).toEqual({ fromBlock: head - 9_000n + 1n, toBlock: head });
     expect(cov.oldest).toEqual({ fromBlock: created, toBlock: created + 9_000n - 1n });
   });
-  it('is already exhausted when the head is before the creation block', async () => {
+  it('reads nothing and claims nothing when the head lags the creation block', async () => {
     const s = initialScan(5n, 10n);
     expect(s.exhausted).toBe(true);
     const r = await scanBounded(s, async () => [1]);
     expect(r.logs).toHaveLength(0);
-    expect(coverage(s).all).toBe(true);
+    expect(coverage(s)).toEqual({ all: false });
   });
   it('pauses between requests when asked, never before the first', async () => {
     const t: number[] = [];

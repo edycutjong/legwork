@@ -144,7 +144,7 @@ export type Run = {
 /**
  * Fold raw `Executed` / `Paused` logs into runs, newest first. A `Paused` log always shares its transaction
  * with the `Executed(…, paid = false)` that follows it; the fold attaches it to that run. Duplicate logs
- * (the same tx + logIndex seen from overlapping scans) are dropped.
+ * (the same tx + logIndex — a failed scan round re-reads its windows, since `scanBounded` keeps no partial state) are dropped.
  */
 export function foldEvents(events: OrderEvent[]): Run[] {
   const seen = new Set<string>();
