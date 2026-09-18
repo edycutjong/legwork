@@ -84,6 +84,34 @@ contract GasBurningExecutor {
     receive() external payable { sink += 1; } // ~22k of work after the measurement point
 }
 
+/// Executor that runs several orders in one transaction.
+contract Batcher {
+    Legwork public lw;
+    constructor(Legwork _lw) { lw = _lw; }
+    function go(uint256[] calldata ids) external { for (uint256 i; i < ids.length; i++) lw.execute(ids[i]); }
+    receive() external payable {}
+}
+
+/// Payee that needs more than the 30k stipend to accept (two cold SSTOREs).
+contract GreedyPayee {
+    uint256 public a; uint256 public b;
+    receive() external payable { a += 1; b += 1; }
+}
+
+/// A contract that is both payer and payee and tries topUp / resume from its receive.
+contract PayerPayee {
+    Legwork public lw;
+    uint256 public id;
+    bool public topUpOk; bool public resumeOk;
+    constructor(Legwork _lw) payable { lw = _lw; }
+    function open() external { id = lw.create{value: 0.05 ether}(address(this), 0.01 ether, 60, 0.01 ether, 100 gwei); }
+    receive() external payable {
+        if (msg.sender != address(lw) || id == 0) return;
+        (topUpOk,) = address(lw).call{value: 1}(abi.encodeWithSelector(Legwork.topUp.selector, id));
+        (resumeOk,) = address(lw).call(abi.encodeWithSelector(Legwork.resume.selector, id));
+    }
+}
+
 contract LegworkTest is Test {
     uint256 constant OVERHEAD = 32_503; // the production constant (deploy/arc-mainnet.json)
     uint256 constant CEIL = 120_000;
@@ -579,6 +607,106 @@ contract LegworkTest is Test {
         // the difference is only the warm/cold access pattern of the two callers, never the 22k SSTORE
         uint256 diff = meteredContract > meteredEoa ? meteredContract - meteredEoa : meteredEoa - meteredContract;
         assertLt(diff, 5_000, "receive work is not in the metered window");
+    }
+
+    // ------------------------------------------------------------ audit round 2
+
+    function _metered(Vm.Log[] memory logs) internal pure returns (uint256 m) {
+        (m,,,,,) = abi.decode(logs[logs.length - 1].data, (uint256, uint256, uint256, uint256, uint48, bool));
+    }
+
+    function test_execute_batchedExecutorIsChargedTheIntrinsicOnce() public {
+        // two orders to two existing, cold payees; a batcher runs both in one transaction
+        address p1 = makeAddr("p1"); address p2 = makeAddr("p2");
+        vm.deal(p1, 1); vm.deal(p2, 1);
+        uint256 a = _create(p1, 0.01 ether, 60, 0.01 ether, 100 gwei, 0.05 ether);
+        uint256 b = _create(p2, 0.01 ether, 60, 0.01 ether, 100 gwei, 0.05 ether);
+        Batcher bt = new Batcher(lw);
+        uint256[] memory ids = new uint256[](2); ids[0] = a; ids[1] = b;
+        vm.recordLogs();
+        bt.go(ids);
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        (uint256 m1,,,,,) = abi.decode(logs[0].data, (uint256, uint256, uint256, uint256, uint48, bool));
+        (uint256 m2,,,,,) = abi.decode(logs[1].data, (uint256, uint256, uint256, uint256, uint48, bool));
+        // the second call's metered figure is the first's minus the 21,000 intrinsic (and minus the one tstore the first paid)
+        assertGe(m1 - m2, 21_000 + 100, "intrinsic credited once per transaction (plus the one tstore the first call paid)");
+        assertLe(m1 - m2, 21_000 + 300, "nothing else differs between the two calls");
+    }
+
+    function test_execute_gasStarvationCannotPauseAWorkingPayee() public {
+        // an executor cannot make a working payee look broken by sending too little gas: the 63/64 rule makes the
+        // outer call run out too, so every gas limit either reverts outright or pays the payee
+        HungryPayee hp = new HungryPayee();
+        uint256 id = _create(address(hp), 0.01 ether, 60, 0.01 ether, 100 gwei, 1 ether);
+        uint256 paidRuns;
+        for (uint256 g = 40_000; g <= 140_000; g += 500) {
+            vm.warp(block.timestamp + 60);
+            vm.prank(exec, exec);
+            try lw.execute{gas: g}(id) { paidRuns++; } catch {}
+            assertFalse(_order(id).paused, "never paused by starvation");
+        }
+        assertGt(paidRuns, 0, "high gas limits succeed");
+        assertEq(hp.sink(), paidRuns, "every successful run reached the payee");
+    }
+
+    function test_execute_payeeNeedingMoreThanTheStipendIsAlwaysPaused() public {
+        GreedyPayee gp = new GreedyPayee();
+        uint256 id = _create(address(gp), 0.01 ether, 60, 0.01 ether, 100 gwei, 0.5 ether);
+        vm.prank(exec);
+        lw.execute(id);
+        assertTrue(_order(id).paused);
+        assertEq(address(gp).balance, 0);
+        vm.prank(payer);
+        lw.resume(id);
+        vm.prank(exec);
+        lw.execute(id);
+        assertTrue(_order(id).paused, "paused again: each resume costs the payer one refund + tip");
+    }
+
+    function test_reentrancy_topUpAndResumeFromInsideExecuteAreBlocked() public {
+        PayerPayee pp = new PayerPayee{value: 1 ether}(lw);
+        pp.open();
+        uint256 id = pp.id();
+        vm.prank(exec);
+        lw.execute(id);
+        assertFalse(pp.topUpOk(), "topUp re-entry hit the guard");
+        assertFalse(pp.resumeOk(), "resume re-entry hit the guard");
+        assertEq(address(pp).balance, 1 ether - 0.05 ether + 0.01 ether, "paid once, nothing else moved");
+    }
+
+    function test_cancel_pausedOrderReturnsTheRemainder() public {
+        uint256 id = _create(address(new Rejector()), 0.01 ether, 60, 0.01 ether, 100 gwei, 0.05 ether);
+        vm.prank(exec);
+        lw.execute(id);
+        uint256 remainder = _order(id).deposit;
+        assertTrue(_order(id).paused);
+        uint256 before = payer.balance;
+        vm.prank(payer);
+        lw.cancel(id);
+        assertEq(payer.balance - before, remainder);
+        assertEq(lw.status(id), 0);
+    }
+
+    function test_execute_newAccountCostIsInsideTheWindow() public {
+        // first payment to a never-seen address costs the 25,000 new-account surcharge; it is metered, hence refunded
+        address fresh = makeAddr("never-seen");
+        address existing = makeAddr("existing"); vm.deal(existing, 1);
+        uint256 warm = _live();
+        uint256 a = _create(fresh, 0.01 ether, 60, 0.01 ether, 100 gwei, 0.05 ether);
+        uint256 b = _create(existing, 0.01 ether, 60, 0.01 ether, 100 gwei, 0.05 ether);
+        vm.prank(exec, exec);
+        lw.execute(warm); // the whole test is one transaction: let the first call take the intrinsic credit
+        vm.recordLogs();
+        vm.prank(exec, exec);
+        lw.execute(a);
+        uint256 mFresh = _metered(vm.getRecordedLogs());
+        vm.recordLogs();
+        vm.prank(exec, exec);
+        lw.execute(b);
+        uint256 mExisting = _metered(vm.getRecordedLogs());
+        // 25,000 new-account surcharge, plus the 2,500 cold-vs-warm difference vm.deal introduces for the existing account
+        assertGe(mFresh - mExisting, 25_000, "the new-account surcharge is inside the measured window");
+        assertLe(mFresh - mExisting, 27_500);
     }
 
     // ------------------------------------------------------------ fuzz

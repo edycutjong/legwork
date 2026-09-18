@@ -9,7 +9,9 @@ pragma solidity ^0.8.28;
 ///         the refund is `metered * price` with no oracle and no second funding token.
 /// @dev    `OVERHEAD` is the gas the call spends outside the measured window (intrinsic + calldata + everything after
 ///         the measurement point). It is calibrated on mainnet against receipt `gasUsed` and passed to the
-///         constructor, so recalibration is a redeploy of identical bytecode.
+///         constructor, so recalibration is a redeploy of identical bytecode. The transaction's intrinsic 21,000 is
+///         charged once per transaction (transient flag), so a contract executor running several orders in one
+///         transaction is not over-refunded for it.
 contract Legwork {
     struct Order {
         address payer;        // slot 0
@@ -32,11 +34,14 @@ contract Legwork {
     uint256 public constant REFUND_CEIL_GAS = 120_000;
     /// @notice Gas stipend forwarded with the executor's payout.
     uint256 public constant EXECUTOR_GAS = 30_000;
+    /// @notice The part of OVERHEAD that a transaction pays once, however many orders it executes.
+    uint256 public constant INTRINSIC_GAS = 21_000;
 
     uint256 public nextId;
     mapping(uint256 => Order) public orders;
 
-    uint256 private transient _lock;
+    uint256 private transient _lock;    // re-entrancy guard
+    uint256 private transient _txSeen;  // set by the first execute of a transaction
 
     event Created(uint256 indexed id, address indexed payer, address indexed payee, uint96 amount, uint32 interval, uint96 tip, uint48 maxGasPrice, uint128 deposit);
     event Executed(uint256 indexed id, address indexed executor, uint256 gasMetered, uint256 price, uint256 refund, uint256 tip, uint48 nextDue, bool paid);
@@ -55,6 +60,7 @@ contract Legwork {
     error PayoutFailed();
 
     constructor(uint256 overhead) {
+        if (overhead < INTRINSIC_GAS) revert BadParams();
         OVERHEAD = overhead;
     }
 
@@ -66,6 +72,7 @@ contract Legwork {
         payable
         returns (uint256 id)
     {
+        if (_lock != 0) revert Reentrant();
         if (payee == address(0) || amount == 0 || interval == 0 || maxGasPrice == 0) revert BadParams();
         if (msg.value > type(uint128).max) revert BadParams();
         uint256 need = _needed(amount, tip, maxGasPrice);
@@ -120,6 +127,8 @@ contract Legwork {
     /// @notice Run one due period of order `id`. Anyone may call; the caller is repaid metered gas + tip.
     /// @dev    The metering block is lines 1, 4-5 and 9-12 of the body. Nothing of variable cost runs after the
     ///         measurement point (line 9): one fixed value call to the executor, one fixed-width event, one tstore.
+    ///         A contract executor's own code (its CALL into this function, its `receive`) is outside the window and is
+    ///         its own cost; the intrinsic 21,000 is credited once per transaction.
     function execute(uint256 id) external {
         uint256 g0 = gasleft();                                                     // 1  first statement
         if (_lock != 0) revert Reentrant();                                         // 2  guard (transient)
@@ -129,6 +138,7 @@ contract Legwork {
         if (o.paused) revert IsPaused();
         uint48 nextDue = o.nextDue;
         if (block.timestamp < nextDue) revert NotDue(nextDue);
+        if (_txSeen == 0) { _txSeen = 1; g0 += INTRINSIC_GAS; }                     //    intrinsic credited to the first execute of a transaction only
         uint256 price = tx.gasprice;                                                // 4  price = min(gasprice, 2·basefee, maxGasPrice)
         if (price > block.basefee << 1) price = block.basefee << 1;
         if (price > o.maxGasPrice) price = o.maxGasPrice;
@@ -149,7 +159,7 @@ contract Legwork {
             deposit += amount;
             emit Paused(id, msg.sender, 1);
         }
-        uint256 metered = g0 - gasleft() + OVERHEAD;                                // 9  measurement point
+        uint256 metered = g0 - gasleft() + (OVERHEAD - INTRINSIC_GAS);              // 9  measurement point
         if (metered > REFUND_CEIL_GAS) metered = REFUND_CEIL_GAS;
         uint256 refund = metered * price;                                           // 10 bounded by the deposit
         if (refund > deposit) refund = deposit;
