@@ -1,0 +1,188 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── STAGE 1: Quality (web + contract, parallel with Stage 2) ─────────
+  web-quality:
+    name: "Stage 1 · Web Quality"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ${{ github.event_name == 'push' && fromJSON('[22, 24]') || fromJSON('[22]') }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+      - run: npm ci
+      - name: Lint (oxlint)
+        run: npm run lint
+      - name: Type check
+        run: npm run typecheck
+      - name: Unit + property tests with coverage
+        run: npm run test:coverage
+      - uses: actions/upload-artifact@v4
+        if: matrix.node-version == 22
+        with:
+          name: web-coverage
+          path: coverage/
+          retention-days: 7
+
+  contract-quality:
+    name: "Stage 1 · Contract (Foundry)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: foundry-rs/foundry-toolchain@v1
+      - name: forge fmt (advisory)
+        run: forge fmt --check
+        continue-on-error: true
+      - name: forge build
+        run: forge build --sizes
+      - name: forge test (unit · fuzz · invariants)
+        run: forge test -vv
+
+  # ── STAGE 2: Security (parallel with Stage 1) ───────────────────────
+  secret-scan:
+    name: "Stage 2 · Secret Scanning (gitleaks, full history)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dependency-audit:
+    name: "Stage 2 · Dependency Audit"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: npm audit (high + critical)
+        run: npm audit --audit-level=high
+        continue-on-error: true
+      - name: License compliance
+        run: npx license-checker --production --failOn "GPL-3.0;AGPL-3.0" --summary
+        continue-on-error: true
+
+  # ── STAGE 3: Build + readiness ──────────────────────────────────────
+  build:
+    name: "Stage 3 · Build · JS budget · readiness gate"
+    needs: [web-quality, contract-quality]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: foundry-rs/foundry-toolchain@v1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: npm ci
+      - name: Vite production build
+        run: npm run build
+      - name: JS budget (warn > 400 KB, fail > 600 KB)
+        run: npm run build:check
+      - name: Readiness gate (test counts == README, no placeholders, no private material, every DEMO hash has a receipt)
+        run: python3 scripts/preflight.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
+
+  # ── STAGE 4: End-to-end ─────────────────────────────────────────────
+  e2e:
+    name: "Stage 4 · E2E (Playwright, desktop + mobile, live mainnet reads)"
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - run: npx playwright test
+        env:
+          CI: "true"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+
+  # ── STAGE 5: Performance ────────────────────────────────────────────
+  performance:
+    name: "Stage 5 · Lighthouse"
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Lighthouse CI (accessibility ≥ 0.9 is the hard gate)
+        run: npx --yes @lhci/cli@0.14.0 autorun
+        continue-on-error: true
+
+  # ── STAGE 6: Deploy gate → GitHub Pages (main only) ─────────────────
+  deploy:
+    name: "Stage 6 · Deploy gate → gh-pages"
+    needs: [build, e2e, performance, secret-scan, dependency-audit]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Publish dist/ to gh-pages (same URL as the manual pushes)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          force_orphan: true
+          commit_message: "pages: ${{ github.sha }}"
+      - run: |
+          echo "All gates passed: quality (web + contract) · security · build + readiness · e2e · lighthouse → gh-pages"

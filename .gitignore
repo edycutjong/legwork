@@ -9,3 +9,12 @@ out/
 cache/
 broadcast/
 !.env.example
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+# Lighthouse
+.lighthouseci/
+# kitchen media is synced, never authored here
+assets/
