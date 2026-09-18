@@ -7,6 +7,8 @@ import { CONTRACT, estimateExecute, getOrder, head, receipt as getReceipt, scanH
 import { addrLink, amount, badge, chip, countdown, errorText, fmtGwei, h, notice, short, spinner, txLink } from '../ui';
 import { connect, maxFeeThePageWillSend, onWallet, sendCancel, sendExecute, sendResume, sendTopUp, wallet } from '../wallet';
 
+const ZERO = '0x0000000000000000000000000000000000000000';
+
 export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0x${string}` } = {}) {
   root.replaceChildren(h('p', {}, spinner(), ` reading order #${id}…`));
   let order: Order, hd: { number: bigint; timestamp: bigint; basefee: bigint };
@@ -16,7 +18,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
     root.replaceChildren(notice('error', 'Could not read the order: ', errorText(e)));
     return;
   }
-  if (order.payer === '0x0000000000000000000000000000000000000000') {
+  if (order.payer === ZERO) {
     root.replaceChildren(
       opts.tx
         ? notice('info', `Order #${id} has been cancelled since this run — the receipt below is read from the chain and stays there.`)
@@ -27,7 +29,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
       try {
         const x = decodeReceipt(await getReceipt(opts.tx), CONTRACT);
         if (x.executed && x.executed.id !== id) root.append(notice('error', `That transaction executed order #${x.executed.id}, not #${id}.`));
-        else root.append(receiptBox(x, { payee: x.payeeLeg?.to ?? '0x0000000000000000000000000000000000000000', amount: x.payeeLeg?.value ?? 0n }));
+        else root.append(receiptBox(x, { payee: x.payeeLeg?.to ?? ZERO, amount: x.payeeLeg?.value ?? 0n }));
       } catch (e) { root.append(notice('error', errorText(e))); }
     }
     return;
@@ -41,6 +43,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
   const card = h('div', { class: 'card' });
   left.append(card);
   let timer: number | undefined;
+  let offWallet = () => {};
   let gen = 0; // a history-scan reset while a round is in flight makes that round's result stale
   let seenBlock = 0n; // the newest block this page has seen a receipt in — the scan head must not lag it
   const receiptSlot = h('div');
@@ -122,8 +125,9 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
 
   const refresh = async (afterTx?: `0x${string}`) => {
     [order, hd] = await Promise.all([getOrder(id), head()]);
-    if (order.payer === '0x0000000000000000000000000000000000000000') {
+    if (order.payer === ZERO) {
       if (timer) clearInterval(timer);
+      offWallet();
       card.replaceChildren(
         h('h2', {}, `Order #${id}`),
         notice('ok', 'Cancelled — the whole remaining deposit went back to the payer. ', afterTx ? txLink(afterTx, 'transaction') : ''),
@@ -144,7 +148,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
     if (st === 'Due' && !wasDue) { drawCard(); return; }
     if (cd && st === 'Waiting') cd.textContent = countdown(Number(order.nextDue - now));
   }, 1000);
-  const offWallet = onWallet(() => drawCard());
+  offWallet = onWallet(() => drawCard());
   window.addEventListener('hashchange', () => { if (timer) clearInterval(timer); offWallet(); }, { once: true });
 
   // ---------------------------------------------------------------- execute → receipt
@@ -158,17 +162,18 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
       out.replaceChildren(notice('info', spinner(), ' Sent ', txLink(hash), ' — Arc finalizes at inclusion; one receipt poll…'));
       const r = await waitReceipt(hash);
       seenBlock = r.blockNumber;
+      const payee = order.payee, amount = order.amount;
       await refresh();
       out.replaceChildren();
-      showReceipt(decodeReceipt(r, CONTRACT, order.payee), order);
-      loadRuns(true);
+      showReceipt(decodeReceipt(r, CONTRACT, payee), { payee, amount });
+      if (order.payer !== ZERO) loadRuns(true); // cancelled meanwhile: the card says so
     } catch (e) {
       out.replaceChildren(notice('error', errorText(e)));
       btn.disabled = false;
     }
   }
 
-  function showReceipt(x: Decoded, o: Order) {
+  function showReceipt(x: Decoded, o: Pick<Order, 'payee' | 'amount'>) {
     if (x.executed && x.executed.id !== id) {
       receiptSlot.replaceChildren(notice('error', `That transaction executed order #${x.executed.id}, not #${id}. `, txLink(x.hash)));
       return;
@@ -192,7 +197,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
       h('ul', { class: 'lines' },
         e.paid
           ? line('', 'payee received', `Transfer ${short(CONTRACT)} → ${short(o.payee)} from the system emitter`, x.payeeLeg?.value ?? o.amount)
-          : line('debit', 'payee refused', `no payee leg; ${usdc18(o.amount)} USDC stayed in the deposit`, 0n),
+          : line('debit', 'payee refused', o.payee === ZERO ? 'no payee leg; the amount stayed in the deposit (the order has since been cancelled)' : `no payee leg; ${usdc18(o.amount)} USDC stayed in the deposit`, 0n),
         line('credit', 'executor refunded', `Executed.refund = ${e.gasMetered} gas metered × ${fmtGwei(e.price)}`, e.refund, '+'),
         line('credit', 'executor tipped', 'Executed.tip', e.tip, '+'),
         line('debit', 'real fee paid', `receipt.gasUsed ${x.gasUsed} × effectiveGasPrice ${fmtGwei(x.effectiveGasPrice)} — from the receipt, not from us`, x.realFee, '−'),
@@ -203,7 +208,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
       h('div', { class: 'links' },
         h('a', { href: explorerTx(x.hash), target: '_blank', rel: 'noopener' }, 'transaction'),
         h('a', { href: explorerAddress(CONTRACT), target: '_blank', rel: 'noopener' }, 'contract'),
-        h('a', { href: explorerAddress(o.payee), target: '_blank', rel: 'noopener' }, 'payee'),
+        o.payee === ZERO ? '' : h('a', { href: explorerAddress(o.payee), target: '_blank', rel: 'noopener' }, 'payee'),
         h('a', { href: explorerAddress(x.executor), target: '_blank', rel: 'noopener' }, 'executor')),
     );
     return box;
@@ -253,7 +258,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
     const g = gen;
     older.disabled = true;
     try {
-      const res = await scanHistory(id, scan);
+      const res = await scanHistory(id, scan, () => g !== gen);
       if (g !== gen) return; // reset happened meanwhile; that round owns the state now
       scan = res.state;
       events.push(...res.logs);
@@ -264,6 +269,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
         : `Scanned the newest blocks ${cov.newest?.fromBlock} → ${cov.newest?.toBlock} and the oldest ${cov.oldest?.fromBlock} → ${cov.oldest?.toBlock} in ≤ 9,000-block windows, one request at a time. Runs in between are fetched only on request.`;
       older.disabled = scan.exhausted;
     } catch (e) {
+      if (g !== gen) return;
       runsBody.replaceChildren(notice('error', 'History scan failed: ', errorText(e)));
       older.disabled = false;
     }

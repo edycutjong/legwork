@@ -30,7 +30,7 @@ dollar, so the refund is arithmetic.
 
 ## 1 · The receipt
 
-<div align="center"><img src="docs/assets/receipt-order-5.png" alt="The receipt the page shows after Execute: payee received 0.001 USDC; executor refunded +0.001168 USDC (58415 gas metered × 20 Gwei); executor tipped +0.001; real fee paid −0.001168 (receipt.gasUsed 58415 × effectiveGasPrice 20 Gwei); executor net +0.001, drift 0 gas, refund ÷ fee 1.000000" width="760"></div>
+<div align="center"><img src="docs/assets/receipt-order-5.png" alt="The receipt the page shows after Execute: payee received 0.001 USDC; executor refunded +0.0011683 USDC (58415 gas metered × 20 Gwei); executor tipped +0.001; real fee paid −0.0011683 (receipt.gasUsed 58415 × effectiveGasPrice 20 Gwei); executor net +0.001, drift 0 gas, refund ÷ fee 1.000000" width="760"></div>
 
 That is order #5 on Arc mainnet, created from the page's form and run from its **Execute** button
 ([`0x2f6a352d…0c95`](https://explorer.arc.io/tx/0x2f6a352d11823a37ad085151067856131833ef978445fbed5941e7d17b5b0c95)) — the page renders it at
@@ -51,8 +51,8 @@ read the receipt. The payee gets 0.02 USDC; you get the metered gas back plus a 
 base fee) → the card opens *Due* → **Execute**. Reading the page needs no wallet at all; signing uses the injected one and
 offers to add Arc (chain 5042) if it is missing. Prerequisite: USDC on Arc — bringing it from another chain is Circle's bridge, not this project.
 
-**Who this is for:** anyone who pays the same address on a schedule in USDC — retainers, payroll, subscriptions, DCA into a
-vault — and does not want to run a cron box holding a hot key and a second gas token to do it; and payees, who can be their own
+**Who this is for:** anyone who pays the same address on a schedule in USDC — retainers, payroll, subscriptions, any payee that
+accepts native USDC within the 30,000-gas stipend — and does not want to run a cron box holding a hot key and a second gas token to do it; and payees, who can be their own
 executor and collect on the tick (five of the thirty bench rows are exactly that).
 
 ## 3 · Numbers

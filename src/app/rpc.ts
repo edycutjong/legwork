@@ -98,8 +98,8 @@ async function orderLogs(id: bigint, fromBlock: bigint, toBlock: bigint): Promis
 }
 
 /** Bounded two-ended history for one order: `maxChunks` × ≤ 9,000 blocks from the head and from createdBlock, ≥ 400 ms apart. */
-export async function scanHistory(id: bigint, state: ScanState, maxChunks = CHUNKS_ON_OPEN) {
-  return scanBounded<OrderEvent>(state, (w) => orderLogs(id, w.fromBlock, w.toBlock), maxChunks, undefined, 400);
+export async function scanHistory(id: bigint, state: ScanState, stale: () => boolean = () => false, maxChunks = CHUNKS_ON_OPEN) {
+  return scanBounded<OrderEvent>(state, (w) => { if (stale()) throw new Error('scan superseded'); return orderLogs(id, w.fromBlock, w.toBlock); }, maxChunks, undefined, 400);
 }
 
 export const startScan = (headNumber: bigint, createdBlock: bigint) => initialScan(headNumber, createdBlock);

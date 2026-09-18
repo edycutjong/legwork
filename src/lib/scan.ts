@@ -5,7 +5,7 @@
  * (a run the reader just made) and the oldest, from the order's creation block (its first runs). At ~2 blocks/s
  * a one-ended backward scan would need dozens of requests to reach a run made yesterday; the two-ended one shows
  * a seeded order's first runs and a reviewer's latest run with the same eight windows. Nothing is ever read
- * before `createdBlock` or twice.
+ * before `createdBlock`, and nothing twice within a round (a failed round re-reads its windows: no partial state is kept).
  */
 
 export const CHUNK = 9_000n;
