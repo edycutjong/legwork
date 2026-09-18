@@ -3,7 +3,7 @@ import { explorerAddress, explorerTx } from '../../lib/chain';
 import { foldEvents, neededAt, orderStatus, priceCapAt, runsLeft, usdc18, type Order, type OrderEvent, type Run } from '../../lib/orders';
 import { decodeReceipt, type Decoded } from '../../lib/receipt';
 import type { ScanState } from '../../lib/scan';
-import { CONTRACT, OVERHEAD, estimateExecute, getOrder, head, receipt as getReceipt, scanHistory, startScan, waitReceipt } from '../rpc';
+import { CONTRACT, estimateExecute, getOrder, head, receipt as getReceipt, scanHistory, startScan, waitReceipt } from '../rpc';
 import { addrLink, amount, badge, chip, countdown, errorText, fmtGwei, h, notice, short, spinner, txLink } from '../ui';
 import { connect, maxFeeThePageWillSend, onWallet, sendCancel, sendExecute, sendResume, sendTopUp, wallet } from '../wallet';
 
@@ -173,7 +173,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
         line('credit', 'executor refunded', `Executed.refund = ${e.gasMetered} gas metered × ${fmtGwei(e.price)}`, e.refund, '+'),
         line('credit', 'executor tipped', 'Executed.tip', e.tip, '+'),
         line('debit', 'real fee paid', `receipt.gasUsed ${x.gasUsed} × effectiveGasPrice ${fmtGwei(x.effectiveGasPrice)} — from the receipt, not from us`, x.realFee, '−'),
-        line(`net ${net >= 0n ? 'positive' : 'negative'}`, 'executor net', `refund + tip − real fee · drift ${x.drift} gas (gasUsed − metered, after OVERHEAD ${OVERHEAD}) · refund ÷ fee ${x.ratio?.toFixed(6)}`, net < 0n ? -net : net, net >= 0n ? '+' : '−'),
+        line(`net ${net >= 0n ? 'positive' : 'negative'}`, 'executor net', `refund + tip − real fee · drift ${x.drift} gas (gasUsed − metered) · refund ÷ fee ${x.ratio?.toFixed(6)}`, net < 0n ? -net : net, net >= 0n ? '+' : '−'),
       ),
       h('div', { class: 'legs' }, h('strong', {}, 'Native USDC legs in this receipt (EIP-7708 Transfer logs):'),
         h('ul', {}, ...x.legs.map((l) => h('li', {}, `${short(l.from)} → ${short(l.to)}  ${usdc18(l.value)} USDC  (${l.value} wei)`)))),

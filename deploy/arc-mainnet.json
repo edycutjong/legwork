@@ -6,13 +6,13 @@
   "payeeDemo": "0x352e5cDea885DBCAbe850259CA8AA6759b5aAA60",
   "payeePrefundTx": "0x63087270e751ba502876679396aef9872b14ebb2a92244b8da57c230d82a57f2",
   "contract": {
-    "address": "0x68a92aF2Be2e6A640a19508a0fe44cbc8B2C62E2",
+    "address": "0x8E2F8AFC29e9dc127103CD6AD5BCfBe661141ccb",
     "overhead": 32503,
-    "block": 21487050,
-    "tx": "0xc79a26e0b241ca64a5d683c020abe7032bd518d1052c28ade0705655c98eaf68",
-    "deployGasUsed": 984847,
-    "runtimeCodeKeccak": "0x81ae63c2a4db4b0f93e76eb67239ba13f33e563eaff23783f637fab93c11363f",
-    "note": "runtime code == forge build output with the immutable OVERHEAD filled in (see scripts/preflight.py --bytecode)"
+    "block": 21493643,
+    "tx": "0xe2319949877acaebdea9273aa7d866c0a10048d3d2f14ab6618e9a0c25fcdfe3",
+    "deployGasUsed": 1008235,
+    "runtimeCodeKeccak": "0x9ddc2eaf43975626f5347f4d44b382efbdde24d697403713563cce038e47c0bc",
+    "note": "runtime code == forge build output with the immutable OVERHEAD filled in (scripts/preflight.py --bytecode); v2 — intrinsic credited once per transaction"
   },
   "calibration": {
     "address": "0x16B4101605c496C7Fbe54490C6467eeF996EA775",
@@ -55,8 +55,8 @@
   "orders": {
     "live": {
       "id": 1,
-      "create": "0xe43cfe61e4c3310f0577cbca8e1ddf05851cdfe93ec63c902a02ba37e0343a9e",
-      "createBlock": 21487556,
+      "create": "0xa2b0ad0c2c649593b7f76493440f49e84c6399c60c1662f6f4148b12b4a72157",
+      "createBlock": 21493738,
       "params": {
         "payee": "0x352e5cDea885DBCAbe850259CA8AA6759b5aAA60",
         "amount": "20000000000000000",
@@ -65,13 +65,13 @@
         "maxGasPrice": "100000000000",
         "deposit": "100000000000000000"
       },
-      "firstRun": "0x651700ee3f058685b0cdb896a707f5e5e7e8c507076a3f0f4d6816f3d6e25f0b",
-      "firstRunBlock": 21487558
+      "firstRun": "0x0a598c846c6a6fd0e9f07fcee1f6d643d39bb2c2483ae0e3465ee3c6775cd04d",
+      "firstRunBlock": 21493741
     },
     "rejecting": {
       "id": 2,
-      "create": "0x6d9989fc5e6622d6dd6df96a98c860c472a28a5130651daa05fe36bd7fffdaf5",
-      "createBlock": 21487560,
+      "create": "0x8ed047381c404dcb58fc0076ec4105a323be2deeff112ff2212226596df27d82",
+      "createBlock": 21493744,
       "params": {
         "payee": "0x1c17C16177f2aC609440ea20c00D0e108F617c47",
         "amount": "10000000000000000",
@@ -80,13 +80,13 @@
         "maxGasPrice": "100000000000",
         "deposit": "50000000000000000"
       },
-      "firstRun": "0xf4cdeb7523c64082f9e09fa3bf738fd676bad1ef401c4f7c9622d0d41c3d71b7",
-      "firstRunBlock": 21487562
+      "firstRun": "0xd07f9fb9f06deeab35a0e795ab0440f8150fb60e4f816993d57bee6a1470dc64",
+      "firstRunBlock": 21493747
     },
     "capped": {
       "id": 3,
-      "create": "0xff7344dd8b19f6a593567bcfffb139421f409cb883b1db1c0bc7740ee5383997",
-      "createBlock": 21487564,
+      "create": "0xe7d33616540f9055ea1b5cd6bc9140e1776a94734a93619b967fccc05dfb44f8",
+      "createBlock": 21493749,
       "params": {
         "payee": "0x352e5cDea885DBCAbe850259CA8AA6759b5aAA60",
         "amount": "10000000000000000",
@@ -95,17 +95,17 @@
         "maxGasPrice": "20000000000",
         "deposit": "50000000000000000"
       },
-      "firstRun": "0x76d508646679f86e55fbd50fe05b614a61cfa2cfa2721162abe7665f92343eaf",
-      "firstRunBlock": 21487566
+      "firstRun": "0x6595b5a60548ab65b879f9012142764f3118d582fdc29d5dc8da2b457d413c98",
+      "firstRunBlock": 21493751
     },
     "pageTest": {
       "id": 4,
-      "create": "0x32e3c9d59d25d31b2f01000cf1fb4f636389ae2ca3116b170e13e6ea0d59f5c8",
-      "createBlock": 21488935,
-      "firstRun": "0xbe115310fd76f686c2bc8ee6a3d846f3c5a39561522898d166834d9047736149",
-      "firstRunBlock": 21488938,
-      "cancel": "0x17942d06a5be8bee2f02ee379a15ef4d1c8818d62b6ce69a56da90a60b9b786f",
-      "cancelBlock": 21488947,
+      "create": "0xe5f88cca0b5e3684b0f98cc746c4db2d07c7734a27a3e5f360b5ed438d65b279",
+      "createBlock": 21493798,
+      "firstRun": "0xf71fffd0f3dee7e43f9df1ba87bc7f954e97d29d42a59435ead45485b5dd7154",
+      "firstRunBlock": 21493802,
+      "cancel": "0x7f51179362b3772d6cd36a44e7053fe57e1fc9790dbad380ac81770ab0e88675",
+      "cancelBlock": 21493811,
       "params": {
         "payee": "0x352e5cDea885DBCAbe850259CA8AA6759b5aAA60",
         "amount": "1000000000000000",
@@ -114,17 +114,35 @@
         "maxGasPrice": "100000000000",
         "deposit": "8800000000000000"
       },
-      "note": "created, executed and cancelled through the page's own code path (form -> Execute button -> Cancel) with an injected provider forwarding eth_sendTransaction to cast; the hero flow timed at ~40 s create->receipt"
+      "note": "created, executed and cancelled through the page's own code path (form -> Execute -> Cancel & withdraw) by a headless browser whose injected provider forwards eth_sendTransaction to a signer; create -> receipt on screen 9.7 s wall clock"
+    },
+    "pageTest2": {
+      "id": 5,
+      "create": "0x52d964dc80968c71a55784c8a7535eff63c6755862883dd6002329c13c2b0bc7",
+      "createBlock": 21494011,
+      "firstRun": "0x2f6a352d11823a37ad085151067856131833ef978445fbed5941e7d17b5b0c95",
+      "firstRunBlock": 21494016,
+      "cancel": "0x86637f322dab1cea08ed60cc4ea487204042f7eb5b19bfecc4b968dc6595f75d",
+      "cancelBlock": 21494025,
+      "params": {
+        "payee": "0x352e5cDea885DBCAbe850259CA8AA6759b5aAA60",
+        "amount": "1000000000000000",
+        "interval": 60,
+        "tip": "1000000000000000",
+        "maxGasPrice": "100000000000",
+        "deposit": "8800000000000000"
+      },
+      "note": "the same page flow run a second time (an accidental repeat of the harness); kept because it happened"
     },
     "bench": {
-      "id": 5,
-      "create": "0x2fa0ae0af39d0470cecea9cc6e156e9ae2bdb172cb220d2fef8cdf5cb4c0a160",
-      "createBlock": 21489885,
+      "id": 6,
+      "create": "0xbce08fa767781e6c40c28827b046292def95039009e5b4aa94bf1f3f6b8bb3b2",
+      "createBlock": 21494268,
       "runs": 30,
-      "firstRun": "0x3734f3b7b80c0fe92c422b8f64711c9fea16fa6eb37c1a289f72d68aa32b04a6",
-      "lastRun": "0xd1d528853e0776f6a1f034f0119675825888f273023bcc3b598b4f4e3b9344fb",
-      "cancel": "0x32615c3ceeeaf5b59380e7dae646f40fc3f5a9bf497d97b02f690f75b9d0b57f",
-      "cancelBlock": 21490011,
+      "firstRun": "0xf4c46a623add8bd7d1835dd128b7cfb6917900553568168ab6f9513e12734164",
+      "lastRun": "0x43069dce9d262d1baaf5367fb41546830b67ce7a7b8cd4b9ff9bdfa1c9ce440d",
+      "cancel": "0x37635a1876d2c63e731a0cdc64cfd2030a127f09553cf9c0809e343cdf5219cb",
+      "cancelBlock": 21494353,
       "params": {
         "payee": "0x352e5cDea885DBCAbe850259CA8AA6759b5aAA60",
         "amount": "1000000000000000",
@@ -132,22 +150,21 @@
         "tip": "100000000000000",
         "maxGasPrice": "100000000000",
         "deposit": "108500000000000000"
-      },
-      "extraRun": "0x861625470e447205ef4429bc9374124a76f44272c5674ad8cf05d29482c7bdb4"
+      }
     },
     "notDue": {
-      "id": 6,
-      "create": "0xabda768ea83183f795e47616ab78727875236a541a28edee8b95dd6fced09afb",
-      "createBlock": 21490138,
-      "firstRun": "0x7793ef458e2705c12a853a3b2ed9dcb26dfc0cd15ea190cdf7f67bb0f7ac51aa",
-      "firstRunBlock": 21490147,
-      "revert": "0x703f54c8d7b65de8d8031f60a5a917e52e77551acf1d2ba701c0e3c78264c9f6",
-      "revertBlock": 21490150,
+      "id": 7,
+      "create": "0x700396e8c511358f06162a8c33a7207252b69a5871c25bf462cd9dfbe2d166b8",
+      "createBlock": 21494376,
+      "firstRun": "0xb0f24f9ec801c2e68b010666a3954f6aab63e6549ba8f6761d5ee38faca87399",
+      "firstRunBlock": 21494378,
+      "revert": "0x4fc9a3af02079e9bad40001108936c268a8269c88c231e6633517db854f556a6",
+      "revertBlock": 21494381,
       "revertStatus": "reverted",
       "revertGasUsed": 24323,
-      "ethCallReason": "NotDue(1789733066) \u2014 eth_call execute(6) at block 21490149 (the block before the forced tx) reverts with data 0x12d2fbb9\u20266aad2cca = NotDue(uint48 nextDue), nextDue = 1789733066 (2026-09-18 12:04:26 UTC, one hour after run 1)",
-      "cancel": "0x19a81aa3185f0b6d1819b4602ee4e97b5b7bdc29a2164300eade5e97798b7f47",
-      "cancelBlock": 21490153,
+      "ethCallReason": "NotDue(1789736240)",
+      "cancel": "0x2bfaeae7fc0fada15c8779561dacc774df68f399385157434627c879fad221d0",
+      "cancelBlock": 21494383,
       "params": {
         "payee": "0x352e5cDea885DBCAbe850259CA8AA6759b5aAA60",
         "amount": "1000000000000000",
@@ -157,5 +174,127 @@
         "deposit": "7000000000000000"
       }
     }
-  }
+  },
+  "previous": [
+    {
+      "address": "0x68a92aF2Be2e6A640a19508a0fe44cbc8B2C62E2",
+      "overhead": 32503,
+      "block": 21487050,
+      "tx": "0xc79a26e0b241ca64a5d683c020abe7032bd518d1052c28ade0705655c98eaf68",
+      "deployGasUsed": 984847,
+      "runtimeCodeKeccak": "0x81ae63c2a4db4b0f93e76eb67239ba13f33e563eaff23783f637fab93c11363f",
+      "retired": "2026-09-18 — audit round 2: a contract executor batching K orders in one transaction was over-refunded the 21,000 intrinsic K−1 times (bounded by each order's reserve; never exploited). v2 credits the intrinsic once per transaction. All v1 receipts stay in proof/receipts/ and are rechecked.",
+      "orders": {
+        "live": {
+          "id": 1,
+          "create": "0xe43cfe61e4c3310f0577cbca8e1ddf05851cdfe93ec63c902a02ba37e0343a9e",
+          "createBlock": 21487556,
+          "params": {
+            "payee": "0x352e5cDea885DBCAbe850259CA8AA6759b5aAA60",
+            "amount": "20000000000000000",
+            "interval": 60,
+            "tip": "10000000000000000",
+            "maxGasPrice": "100000000000",
+            "deposit": "100000000000000000"
+          },
+          "firstRun": "0x651700ee3f058685b0cdb896a707f5e5e7e8c507076a3f0f4d6816f3d6e25f0b",
+          "firstRunBlock": 21487558
+        },
+        "rejecting": {
+          "id": 2,
+          "create": "0x6d9989fc5e6622d6dd6df96a98c860c472a28a5130651daa05fe36bd7fffdaf5",
+          "createBlock": 21487560,
+          "params": {
+            "payee": "0x1c17C16177f2aC609440ea20c00D0e108F617c47",
+            "amount": "10000000000000000",
+            "interval": 60,
+            "tip": "10000000000000000",
+            "maxGasPrice": "100000000000",
+            "deposit": "50000000000000000"
+          },
+          "firstRun": "0xf4cdeb7523c64082f9e09fa3bf738fd676bad1ef401c4f7c9622d0d41c3d71b7",
+          "firstRunBlock": 21487562
+        },
+        "capped": {
+          "id": 3,
+          "create": "0xff7344dd8b19f6a593567bcfffb139421f409cb883b1db1c0bc7740ee5383997",
+          "createBlock": 21487564,
+          "params": {
+            "payee": "0x352e5cDea885DBCAbe850259CA8AA6759b5aAA60",
+            "amount": "10000000000000000",
+            "interval": 60,
+            "tip": "10000000000000000",
+            "maxGasPrice": "20000000000",
+            "deposit": "50000000000000000"
+          },
+          "firstRun": "0x76d508646679f86e55fbd50fe05b614a61cfa2cfa2721162abe7665f92343eaf",
+          "firstRunBlock": 21487566
+        },
+        "pageTest": {
+          "id": 4,
+          "create": "0x32e3c9d59d25d31b2f01000cf1fb4f636389ae2ca3116b170e13e6ea0d59f5c8",
+          "createBlock": 21488935,
+          "firstRun": "0xbe115310fd76f686c2bc8ee6a3d846f3c5a39561522898d166834d9047736149",
+          "firstRunBlock": 21488938,
+          "cancel": "0x17942d06a5be8bee2f02ee379a15ef4d1c8818d62b6ce69a56da90a60b9b786f",
+          "cancelBlock": 21488947,
+          "params": {
+            "payee": "0x352e5cDea885DBCAbe850259CA8AA6759b5aAA60",
+            "amount": "1000000000000000",
+            "interval": 60,
+            "tip": "1000000000000000",
+            "maxGasPrice": "100000000000",
+            "deposit": "8800000000000000"
+          },
+          "note": "created, executed and cancelled through the page's own code path (form -> Execute button -> Cancel) with an injected provider forwarding eth_sendTransaction to cast; the hero flow timed at ~40 s create->receipt"
+        },
+        "bench": {
+          "id": 5,
+          "create": "0x2fa0ae0af39d0470cecea9cc6e156e9ae2bdb172cb220d2fef8cdf5cb4c0a160",
+          "createBlock": 21489885,
+          "runs": 30,
+          "firstRun": "0x3734f3b7b80c0fe92c422b8f64711c9fea16fa6eb37c1a289f72d68aa32b04a6",
+          "lastRun": "0xd1d528853e0776f6a1f034f0119675825888f273023bcc3b598b4f4e3b9344fb",
+          "cancel": "0x32615c3ceeeaf5b59380e7dae646f40fc3f5a9bf497d97b02f690f75b9d0b57f",
+          "cancelBlock": 21490011,
+          "params": {
+            "payee": "0x352e5cDea885DBCAbe850259CA8AA6759b5aAA60",
+            "amount": "1000000000000000",
+            "interval": 1,
+            "tip": "100000000000000",
+            "maxGasPrice": "100000000000",
+            "deposit": "108500000000000000"
+          },
+          "extraRun": "0x861625470e447205ef4429bc9374124a76f44272c5674ad8cf05d29482c7bdb4"
+        },
+        "notDue": {
+          "id": 6,
+          "create": "0xabda768ea83183f795e47616ab78727875236a541a28edee8b95dd6fced09afb",
+          "createBlock": 21490138,
+          "firstRun": "0x7793ef458e2705c12a853a3b2ed9dcb26dfc0cd15ea190cdf7f67bb0f7ac51aa",
+          "firstRunBlock": 21490147,
+          "revert": "0x703f54c8d7b65de8d8031f60a5a917e52e77551acf1d2ba701c0e3c78264c9f6",
+          "revertBlock": 21490150,
+          "revertStatus": "reverted",
+          "revertGasUsed": 24323,
+          "ethCallReason": "NotDue(1789733066) — eth_call execute(6) at block 21490149 (the block before the forced tx) reverts with data 0x12d2fbb9…6aad2cca = NotDue(uint48 nextDue), nextDue = 1789733066 (2026-09-18 12:04:26 UTC, one hour after run 1)",
+          "cancel": "0x19a81aa3185f0b6d1819b4602ee4e97b5b7bdc29a2164300eade5e97798b7f47",
+          "cancelBlock": 21490153,
+          "params": {
+            "payee": "0x352e5cDea885DBCAbe850259CA8AA6759b5aAA60",
+            "amount": "1000000000000000",
+            "interval": 3600,
+            "tip": "100000000000000",
+            "maxGasPrice": "100000000000",
+            "deposit": "7000000000000000"
+          }
+        }
+      },
+      "cancels": {
+        "1": "0x2dce155699a4207d4fab443a5156d641fbdba922bff52d81bb5b620a49adf68a",
+        "2": "0x691521c568624929f7e60818f1118d645bf27398e57d3bbeb051703a42fa3049",
+        "3": "0x3f5028ca725d020fd83fb388f8b438dad350c660387bfa34cb1b334c6ab8bed5"
+      }
+    }
+  ]
 }

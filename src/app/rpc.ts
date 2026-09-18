@@ -38,15 +38,23 @@ export async function getPriceCap(id: bigint): Promise<bigint> {
   return client.readContract({ address: CONTRACT, abi: legworkAbi, functionName: 'priceCap', args: [id] });
 }
 
+/** The calibrated constant, read from the contract itself (the deploy record is only the fallback). */
+export async function overheadOnChain(): Promise<number> {
+  try { return Number(await client.readContract({ address: CONTRACT, abi: legworkAbi, functionName: 'OVERHEAD' })); } catch { return OVERHEAD; }
+}
+
 export async function nextId(): Promise<bigint> {
   return client.readContract({ address: CONTRACT, abi: legworkAbi, functionName: 'nextId' });
 }
 
-/** All orders 1..nextId through Multicall3 (one round-trip); sequential eth_call if the multicall fails. */
+export const LIST_PAGE = 200;
+
+/** The newest `LIST_PAGE` orders through Multicall3 (one round-trip); sequential eth_call if the multicall fails. */
 export async function listOrders(): Promise<{ id: bigint; order: Order }[]> {
   const n = await nextId();
-  const ids = Array.from({ length: Number(n) }, (_, i) => BigInt(i + 1));
-  if (ids.length === 0) return [];
+  const first = n > BigInt(LIST_PAGE) ? n - BigInt(LIST_PAGE) + 1n : 1n;
+  const ids = Array.from({ length: Number(n - first + 1n) }, (_, i) => first + BigInt(i));
+  if (n === 0n) return [];
   let tuples: any[];
   try {
     const res = await client.multicall({

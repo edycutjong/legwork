@@ -3,7 +3,7 @@ import { isAddress, parseGwei } from 'viem';
 import { neededAt, orderStatus, parseUsdc, reserveAt, runsLeft, usdc18 } from '../../lib/orders';
 import { decodeEventLog } from 'viem';
 import { legworkAbi } from '../../lib/abi';
-import { head, listOrders, waitReceipt } from '../rpc';
+import { LIST_PAGE, head, listOrders, nextId, waitReceipt } from '../rpc';
 import { amount, badge, chip, countdown, errorText, h, notice, spinner } from '../ui';
 import { connect, sendCreate, wallet } from '../wallet';
 
@@ -95,7 +95,7 @@ export async function renderHome(root: HTMLElement) {
   const wrap = h('div', { class: 'table-wrap orders' }, h('p', {}, spinner(), ' reading orders…'));
   listCard.append(wrap);
   try {
-    const [orders, hd] = await Promise.all([listOrders(), head()]);
+    const [orders, hd, total] = await Promise.all([listOrders(), head(), nextId()]);
     const now = BigInt(Math.floor(Date.now() / 1000));
     const tbody = h('tbody');
     for (const { id, order } of orders) {
@@ -114,6 +114,7 @@ export async function renderHome(root: HTMLElement) {
     wrap.replaceChildren(
       orders.length === 0 ? h('p', { class: 'muted' }, 'No open orders.') :
       h('table', {}, h('thead', {}, h('tr', {}, h('th', {}, 'id'), h('th', {}, 'payee'), h('th', {}, 'amount / interval'), h('th', {}, 'tip'), h('th', {}, 'status'), h('th', {}, 'next run'), h('th', {}, 'runs · deposit'))), tbody),
+      total > BigInt(LIST_PAGE) ? h('p', { class: 'muted', style: 'margin-top:12px' }, `Showing the newest ${LIST_PAGE} of ${total} orders; older ones open directly at #/o/<id>.`) : '',
       h('p', { class: 'muted', style: 'margin-top:12px' }, `Base fee now ${usdc18(hd.basefee * 10n ** 9n)} Gwei · one honest run of a 0.02 / tip 0.01 order needs ${usdc18(neededAt({ amount: parseUsdc('0.02'), tip: parseUsdc('0.01'), maxGasPrice: parseGwei('100') }, hd.basefee))} USDC.`),
     );
   } catch (e) {

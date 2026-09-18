@@ -26,16 +26,17 @@ import { DEPLOY_FILE, RECEIPTS_DIR, publicClient } from './lib/env';
 const DRIFT_GATE = 50n;
 
 type Row = {
-  hash: string; contract: 'final' | 'calibration'; id: bigint; block: bigint; gasUsed: bigint; gasMetered: bigint; drift: bigint;
+  hash: string; contract: 'final' | 'calibration' | 'v1'; id: bigint; block: bigint; gasUsed: bigint; gasMetered: bigint; drift: bigint;
   price: bigint; egp: bigint; basefee: bigint; refund: bigint; tip: bigint; realFee: bigint; ratio: number; paid: boolean; checks: string[];
 };
 
 async function main() {
   const d = JSON.parse(readFileSync(DEPLOY_FILE, 'utf8'));
-  const contracts: Record<string, 'final' | 'calibration'> = {
+  const contracts: Record<string, 'final' | 'calibration' | 'v1'> = {
     [d.contract.address.toLowerCase()]: 'final',
     [d.calibration.address.toLowerCase()]: 'calibration',
   };
+  for (const p of d.previous ?? []) contracts[p.address.toLowerCase()] = 'v1';
   const files = readdirSync(RECEIPTS_DIR).filter((f) => f.endsWith('.json')).sort();
   const rows: Row[] = [];
   let failures = 0;
@@ -67,7 +68,7 @@ async function main() {
     const eoa = await isEoa(x.executor);
     const drift = x.gasUsed - e.gasMetered;
     const absDrift = drift < 0n ? -drift : drift;
-    if (which === 'final') {
+    if (which === 'final' || which === 'v1') {
       if (!eoa) checks.push('contract executor: drift not gated');
       else if (absDrift > DRIFT_GATE) fail(`drift ${drift} exceeds ${DRIFT_GATE}`);
       else checks.push(`|drift|<=${DRIFT_GATE}`);
@@ -79,9 +80,10 @@ async function main() {
     const block = await publicClient.getBlock({ blockNumber: x.blockNumber });
     const basefee = block.baseFeePerGas ?? 0n;
     let maxGp: bigint | undefined;
-    for (const k of Object.keys(d.orders ?? {})) {
-      const o = d.orders[k];
-      if (which === 'final' && BigInt(o.id) === e.id && o.params) maxGp = BigInt(o.params.maxGasPrice);
+    const orderSets = which === 'final' ? [d.orders ?? {}] : which === 'v1' ? (d.previous ?? []).filter((p: any) => p.address.toLowerCase() === to).map((p: any) => p.orders ?? {}) : [];
+    for (const set of orderSets) for (const k of Object.keys(set)) {
+      const o = set[k];
+      if (BigInt(o.id) === e.id && o.params) maxGp = BigInt(o.params.maxGasPrice);
     }
     if (maxGp === undefined) {
       try {
@@ -131,7 +133,9 @@ async function main() {
     );
   }
   const finals = rows.filter((r) => r.contract === 'final');
-  console.log(`\n${rows.length} execute receipts (${finals.length} on the production contract, ${rows.length - finals.length} calibration), ${skipped} other receipts skipped.`);
+  const v1s = rows.filter((r) => r.contract === 'v1');
+  console.log(`\n${rows.length} execute receipts (${finals.length} on the production contract, ${v1s.length} on the retired v1, ${rows.length - finals.length - v1s.length} calibration), ${skipped} other receipts skipped.`);
+  if (v1s.length) console.log(`v1 drift: min ${Math.min(...v1s.map((r) => Number(r.drift)))} max ${Math.max(...v1s.map((r) => Number(r.drift)))} gas`);
   if (finals.length) {
     const drifts = finals.map((r) => Number(r.drift));
     console.log(`production drift: min ${Math.min(...drifts)} max ${Math.max(...drifts)} gas; ratio min ${Math.min(...finals.map((r) => r.ratio)).toFixed(6)} max ${Math.max(...finals.map((r) => r.ratio)).toFixed(6)}`);
