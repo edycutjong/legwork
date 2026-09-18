@@ -4,7 +4,7 @@ import { foldEvents, neededAt, orderStatus, priceCapAt, runsLeft, usdc18, type O
 import { decodeReceipt, type Decoded } from '../../lib/receipt';
 import { coverage, type ScanState } from '../../lib/scan';
 import { CONTRACT, estimateExecute, getOrder, head, receipt as getReceipt, scanHistory, startScan, waitReceipt } from '../rpc';
-import { addrLink, amount, badge, chip, countdown, errorText, fmtGwei, h, notice, short, spinner, txLink } from '../ui';
+import { addrLink, badge, chip, countdown, errorText, fmtGwei, h, notice, short, spinner, txLink } from '../ui';
 import { connect, maxFeeThePageWillSend, onWallet, sendCancel, sendExecute, sendResume, sendTopUp, wallet } from '../wallet';
 
 const ZERO = '0x0000000000000000000000000000000000000000';
@@ -97,7 +97,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
   };
 
   const payerControls = (st: string) => {
-    const topUpAmt = h('input', { type: 'text', value: usdc18(neededAt(order, hd.basefee)), inputmode: 'decimal', style: 'max-width:160px' });
+    const topUpAmt = h('input', { type: 'text', 'aria-label': 'Top-up amount (USDC)', value: usdc18(neededAt(order, hd.basefee)), inputmode: 'decimal', style: 'max-width:160px' });
     const msg = h('div');
     const topUp = h('button', { class: 'btn quiet', type: 'button' }, 'Top up');
     const resume = h('button', { class: 'btn quiet', type: 'button', disabled: st !== 'Paused' }, 'Resume');

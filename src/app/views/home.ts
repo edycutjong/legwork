@@ -17,24 +17,24 @@ export async function renderHome(root: HTMLElement) {
   root.append(grid);
 
   // ---- form
-  const payee = h('input', { type: 'text', placeholder: '0x…', autocomplete: 'off', spellcheck: 'false' });
-  const amt = h('input', { type: 'text', value: '0.02', inputmode: 'decimal' });
-  const interval = h('select', {}, ...INTERVALS.map(([l, s]) => h('option', { value: s }, `${l} (${s} s)`)));
-  const tip = h('input', { type: 'text', value: '0.01', inputmode: 'decimal' });
-  const maxGp = h('input', { type: 'text', value: '100', inputmode: 'decimal' });
-  const runs = h('input', { type: 'number', value: '3', min: '1', step: '1' });
+  const payee = h('input', { id: 'f-payee', type: 'text', placeholder: '0x…', autocomplete: 'off', spellcheck: 'false' });
+  const amt = h('input', { id: 'f-amount', type: 'text', value: '0.02', inputmode: 'decimal' });
+  const interval = h('select', { id: 'f-interval' }, ...INTERVALS.map(([l, s]) => h('option', { value: s }, `${l} (${s} s)`)));
+  const tip = h('input', { id: 'f-tip', type: 'text', value: '0.01', inputmode: 'decimal' });
+  const maxGp = h('input', { id: 'f-maxgp', type: 'text', value: '100', inputmode: 'decimal' });
+  const runs = h('input', { id: 'f-runs', type: 'number', value: '3', min: '1', step: '1' });
   const quote = h('div', { class: 'quote' });
   const status = h('div');
   const submit = h('button', { class: 'btn wide', type: 'submit' }, 'Create order');
   const form = h('form', {},
-    h('div', { class: 'field' }, h('label', {}, 'Payee'), payee, h('span', { class: 'hint' }, 'Any address. A contract payee gets a 30,000-gas stipend to accept native USDC; one that refuses pauses the order instead of breaking it.')),
+    h('div', { class: 'field' }, h('label', { for: 'f-payee' }, 'Payee'), payee, h('span', { class: 'hint' }, 'Any address. A contract payee gets a 30,000-gas stipend to accept native USDC; one that refuses pauses the order instead of breaking it.')),
     h('div', { class: 'grid-2' },
-      h('div', { class: 'field' }, h('label', {}, 'Amount per run (USDC)'), amt),
-      h('div', { class: 'field' }, h('label', {}, 'Interval'), interval)),
+      h('div', { class: 'field' }, h('label', { for: 'f-amount' }, 'Amount per run (USDC)'), amt),
+      h('div', { class: 'field' }, h('label', { for: 'f-interval' }, 'Interval'), interval)),
     h('div', { class: 'grid-2' },
-      h('div', { class: 'field' }, h('label', {}, 'Executor tip (USDC)'), tip, h('span', { class: 'hint' }, 'What whoever runs it earns on top of the gas refund.')),
-      h('div', { class: 'field' }, h('label', {}, 'Max gas price refunded (Gwei)'), maxGp, h('span', { class: 'hint' }, 'Your ceiling; the contract also caps at 2 × base fee.'))),
-    h('div', { class: 'field' }, h('label', {}, 'Runs to deposit for'), runs),
+      h('div', { class: 'field' }, h('label', { for: 'f-tip' }, 'Executor tip (USDC)'), tip, h('span', { class: 'hint' }, 'What whoever runs it earns on top of the gas refund.')),
+      h('div', { class: 'field' }, h('label', { for: 'f-maxgp' }, 'Max gas price refunded (Gwei)'), maxGp, h('span', { class: 'hint' }, 'Your ceiling; the contract also caps at 2 × base fee.'))),
+    h('div', { class: 'field' }, h('label', { for: 'f-runs' }, 'Runs to deposit for'), runs),
     quote,
     submit,
     status,

@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://edycutjong.github.io/legwork-arc/sitemap.xml

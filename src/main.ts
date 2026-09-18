@@ -3,6 +3,7 @@ import { explorerAddress } from './lib/chain';
 import { CONTRACT, DEPLOY, chainOk, overheadOnChain } from './app/rpc';
 import { renderHome } from './app/views/home';
 import { renderOrder } from './app/views/order';
+import { renderJudge } from './app/views/judge';
 import { h, notice, short } from './app/ui';
 import { connect, injected, onWallet } from './app/wallet';
 
@@ -16,7 +17,7 @@ app.append(
   h('div', { class: 'sheet' },
     h('header', { class: 'masthead' },
       h('a', { class: 'brand', href: '#/' }, h('img', { src: './favicon.svg', alt: '' }), h('strong', {}, 'Legwork'), h('span', { class: 'muted' }, 'standing USDC orders on Arc')),
-      h('nav', {}, h('a', { href: '#/' }, 'orders'), h('a', { href: `#/o/${(DEPLOY.orders as any)?.live?.id ?? 1}` }, 'try the live order'), h('a', { href: explorerAddress(CONTRACT), target: '_blank', rel: 'noopener' }, `contract ${short(CONTRACT)}`), walletSlot)),
+      h('nav', {}, h('a', { href: '#/' }, 'orders'), h('a', { href: `#/o/${(DEPLOY.orders as any)?.live?.id ?? 1}` }, 'try the live order'), h('a', { href: explorerAddress(CONTRACT), target: '_blank', rel: 'noopener' }, `contract ${short(CONTRACT)}`), h('a', { href: '#/judge' }, 'for reviewers'), walletSlot)),
     rpcNotice,
     main,
     h('footer', { class: 'foot' },
@@ -35,19 +36,23 @@ onWallet((w) => {
   );
 });
 
+// Each route renders into its own container: a navigation that lands while the previous view is still awaiting the RPC
+// replaces the container, and the stale render keeps writing into a detached node instead of over the new view.
 async function route() {
   const hash = window.location.hash || '#/';
   const m = /^#\/o\/(\d+)(?:\/tx\/(0x[0-9a-fA-F]{64}))?$/.exec(hash);
-  main.replaceChildren();
-  if (m) await renderOrder(main, BigInt(m[1]), { tx: m[2] as `0x${string}` | undefined });
-  else await renderHome(main);
+  const view = h('div');
+  main.replaceChildren(view);
+  if (m) await renderOrder(view, BigInt(m[1]), { tx: m[2] as `0x${string}` | undefined });
+  else if (hash === '#/judge') renderJudge(view);
+  else await renderHome(view);
 }
 
+window.addEventListener('hashchange', route); // registered before the first render, so an early navigation is never lost
 (async () => {
   overheadOnChain().then((o) => (overheadSlot.textContent = `OVERHEAD() ${o} gas (read from the contract) · REFUND_CEIL_GAS 120,000 · payee stipend 30,000`));
   if (!(await chainOk())) {
     rpcNotice.replaceChildren(notice('error', 'The Arc RPC (https://rpc.mainnet.arc.io) is unreachable or is not chain 5042. The page reads everything from it and has no fallback.'));
   }
   await route();
-  window.addEventListener('hashchange', route);
 })();
