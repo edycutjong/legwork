@@ -4,5 +4,6 @@ export default defineConfig({
   test: {
     include: ['test/ts/**/*.test.ts'],
     environment: 'node',
+    coverage: { provider: 'v8', include: ['src/lib/**'], reporter: ['text', 'lcov'] },
   },
 });

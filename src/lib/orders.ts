@@ -129,6 +129,8 @@ export type OrderEvent = ExecutedLog | PausedLog;
 
 export type Run = {
   transactionHash: `0x${string}`;
+  /** index of the Executed log — a batching contract can run several owed periods of one order in one transaction */
+  logIndex: number;
   blockNumber: bigint;
   executor: `0x${string}`;
   gasMetered: bigint;
@@ -142,37 +144,48 @@ export type Run = {
 };
 
 /**
- * Fold raw `Executed` / `Paused` logs into runs, newest first. A `Paused` log always shares its transaction
- * with the `Executed(…, paid = false)` that follows it; the fold attaches it to that run. Duplicate logs
- * (the same tx + logIndex — a failed scan round re-reads its windows, since `scanBounded` keeps no partial state) are dropped.
+ * Fold raw `Executed` / `Paused` logs into runs, newest first (block, then log index). One run per `Executed` log — a
+ * batching contract that catches up several owed periods of one order in one transaction produces several runs with the
+ * same hash. A `Paused` log is emitted just before the `Executed(…, paid = false)` of the same run, so it attaches to the
+ * nearest `Executed` after it in the same transaction. Duplicate logs (the same tx + logIndex — a failed scan round re-reads
+ * its windows, since `scanBounded` keeps no partial state) are dropped; the result does not depend on input order.
  */
 export function foldEvents(events: OrderEvent[]): Run[] {
   const seen = new Set<string>();
-  const byTx = new Map<string, Run>();
-  const pausedByTx = new Map<string, number>();
+  const unique: OrderEvent[] = [];
   for (const e of events) {
     const k = `${e.transactionHash}:${e.logIndex}`;
     if (seen.has(k)) continue;
     seen.add(k);
+    unique.push(e);
+  }
+  // chain order: by block, then by log index — so "the Executed after this Paused" is well defined
+  unique.sort((a, b) => (a.blockNumber !== b.blockNumber ? (a.blockNumber < b.blockNumber ? -1 : 1) : a.logIndex - b.logIndex));
+  const runs: Run[] = [];
+  let pending: number | undefined; // a Paused reason waiting for its Executed in the same transaction
+  let pendingTx: string | undefined;
+  for (const e of unique) {
     if (e.kind === 'Paused') {
-      pausedByTx.set(e.transactionHash, e.reason);
-    } else {
-      byTx.set(e.transactionHash, {
-        transactionHash: e.transactionHash,
-        blockNumber: e.blockNumber,
-        executor: e.executor,
-        gasMetered: e.gasMetered,
-        price: e.price,
-        refund: e.refund,
-        tip: e.tip,
-        nextDue: e.nextDue,
-        paid: e.paid,
-      });
+      pending = e.reason;
+      pendingTx = e.transactionHash;
+      continue;
     }
+    const run: Run = {
+      transactionHash: e.transactionHash,
+      logIndex: e.logIndex,
+      blockNumber: e.blockNumber,
+      executor: e.executor,
+      gasMetered: e.gasMetered,
+      price: e.price,
+      refund: e.refund,
+      tip: e.tip,
+      nextDue: e.nextDue,
+      paid: e.paid,
+    };
+    if (pending !== undefined && pendingTx === e.transactionHash) run.pausedReason = pending;
+    pending = undefined;
+    pendingTx = undefined;
+    runs.push(run);
   }
-  for (const [tx, reason] of pausedByTx) {
-    const r = byTx.get(tx);
-    if (r) r.pausedReason = reason;
-  }
-  return [...byTx.values()].sort((a, b) => (a.blockNumber === b.blockNumber ? 0 : a.blockNumber > b.blockNumber ? -1 : 1));
+  return runs.reverse();
 }
