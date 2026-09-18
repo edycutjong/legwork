@@ -80,7 +80,7 @@ export function saveReceipt(r: TransactionReceipt) {
   if (!existsSync(RECEIPTS_DIR)) mkdirSync(RECEIPTS_DIR, { recursive: true });
   const j = toJsonReceipt(r);
   writeFileSync(resolve(RECEIPTS_DIR, `${r.transactionHash}.json`), JSON.stringify(j, null, 2) + '\n');
-  const extra = process.env.LEGWORK_RECEIPT_MIRROR; // kitchen copy, outside the repo
+  const extra = process.env.LEGWORK_RECEIPT_MIRROR; // optional second copy, outside the repo
   if (extra) {
     if (!existsSync(extra)) mkdirSync(extra, { recursive: true });
     writeFileSync(resolve(extra, `${r.transactionHash}.json`), JSON.stringify(j, null, 2) + '\n');

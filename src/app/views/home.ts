@@ -28,7 +28,7 @@ export async function renderHome(root: HTMLElement) {
   const status = h('div');
   const submit = h('button', { class: 'btn wide', type: 'submit' }, 'Create order');
   const form = h('form', {},
-    h('div', { class: 'field' }, h('label', {}, 'Payee'), payee, h('span', { class: 'hint' }, 'Any address. A contract that refuses native USDC pauses the order instead of breaking it.')),
+    h('div', { class: 'field' }, h('label', {}, 'Payee'), payee, h('span', { class: 'hint' }, 'Any address. A contract payee gets a 30,000-gas stipend to accept native USDC; one that refuses pauses the order instead of breaking it.')),
     h('div', { class: 'grid-2' },
       h('div', { class: 'field' }, h('label', {}, 'Amount per run (USDC)'), amt),
       h('div', { class: 'field' }, h('label', {}, 'Interval'), interval)),

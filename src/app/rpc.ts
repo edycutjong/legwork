@@ -66,12 +66,22 @@ const pausedEvent = parseAbiItem('event Paused(uint256 indexed id, address index
 const EXECUTED_TOPIC = toEventSelector(executedEvent);
 const PAUSED_TOPIC = toEventSelector(pausedEvent);
 
-/** One raw eth_getLogs per window: topics [[Executed, Paused], id] — both event kinds for one order in one request. */
+/**
+ * One raw eth_getLogs per window: topics [[Executed, Paused], id] — both event kinds for one order in one request.
+ * The public RPC is load-balanced: a backend can lag the head it just reported (-32014 "requested data not
+ * available") or rate-limit a burst (-32005). Both are retried once after a short pause, sequentially.
+ */
 async function orderLogs(id: bigint, fromBlock: bigint, toBlock: bigint): Promise<OrderEvent[]> {
-  const raw = (await client.request({
-    method: 'eth_getLogs',
-    params: [{ address: CONTRACT, fromBlock: numberToHex(fromBlock), toBlock: numberToHex(toBlock), topics: [[EXECUTED_TOPIC, PAUSED_TOPIC], numberToHex(id, { size: 32 })] }],
-  })) as any[];
+  const params = [{ address: CONTRACT, fromBlock: numberToHex(fromBlock), toBlock: numberToHex(toBlock), topics: [[EXECUTED_TOPIC, PAUSED_TOPIC], numberToHex(id, { size: 32 })] }];
+  let raw: any[];
+  try {
+    raw = (await client.request({ method: 'eth_getLogs', params } as any)) as any[];
+  } catch (e: any) {
+    const code = e?.code ?? e?.cause?.code;
+    if (code !== -32014 && code !== -32005) throw e;
+    await new Promise((r) => setTimeout(r, 900));
+    raw = (await client.request({ method: 'eth_getLogs', params } as any)) as any[];
+  }
   const out: OrderEvent[] = [];
   for (const l of raw) {
     const base = { blockNumber: BigInt(l.blockNumber), transactionHash: l.transactionHash as `0x${string}`, logIndex: parseInt(l.logIndex, 16) };

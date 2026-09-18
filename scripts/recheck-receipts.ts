@@ -8,7 +8,10 @@
  *   (1) refund + tip == the EIP-7708 Transfer(contract -> executor) leg, on both `paid` branches
  *   (2) |gasUsed - gasMetered| <= 50 for an EOA executor on the production contract
  *       (the calibration contract's rows are reported with their pre-calibration drift, not gated)
- *   (3) price <= min(effectiveGasPrice, 2 * block.basefee, order.maxGasPrice)
+ *   (3) price == min(effectiveGasPrice, 2 * block.basefee, order.maxGasPrice) when the order's maxGasPrice is
+ *       known (deploy record or a live read) — this is the guard for `tx.gasprice == effectiveGasPrice`;
+ *       price <= min(effectiveGasPrice, 2 * block.basefee) for a cancelled order whose cap is unknown
+ *   (3b) refund == min(gasMetered, REFUND_CEIL_GAS) * price exactly (the deposit bound never applied)
  *   (4) gasMetered < REFUND_CEIL_GAS (the clamp never bound)
  *   (5) paid == true  -> Transfer(contract -> payee) == amount exactly
  *       paid == false -> no payee leg, and a Paused log in the same receipt
@@ -86,13 +89,18 @@ async function main() {
         if (t[0] !== '0x0000000000000000000000000000000000000000') maxGp = BigInt(t[6]);
       } catch { /* cancelled / unreadable: bound by the two chain terms only */ }
     }
-    const bound = maxGp === undefined ? min(x.effectiveGasPrice, 2n * basefee) : min(x.effectiveGasPrice, 2n * basefee, maxGp);
-    if (e.price > bound) fail(`price ${e.price} > min(egp, 2*basefee, maxGasPrice) = ${bound}`);
-    else checks.push('price<=cap');
-    if (e.refund !== (e.gasMetered > REFUND_CEIL_GAS ? REFUND_CEIL_GAS : e.gasMetered) * e.price && e.refund !== 0n) {
-      // refund may only be smaller than metered*price when bounded by the deposit; flag anything else
-      fail(`refund ${e.refund} != gasMetered * price ${e.gasMetered * e.price}`);
+    if (maxGp === undefined) {
+      const bound = min(x.effectiveGasPrice, 2n * basefee);
+      if (e.price > bound) fail(`price ${e.price} > min(egp, 2*basefee) = ${bound}`);
+      else checks.push('price<=cap (maxGasPrice unknown)');
+    } else {
+      const expect = min(x.effectiveGasPrice, 2n * basefee, maxGp);
+      if (e.price !== expect) fail(`price ${e.price} != min(egp, 2*basefee, maxGasPrice) = ${expect}`);
+      else checks.push('price==min(egp,2·basefee,max)');
     }
+    const expectRefund = (e.gasMetered > REFUND_CEIL_GAS ? REFUND_CEIL_GAS : e.gasMetered) * e.price;
+    if (e.refund !== expectRefund) fail(`refund ${e.refund} != min(gasMetered, ceil) * price ${expectRefund}`);
+    else checks.push('refund==metered×price');
 
     // (4) clamp
     if (e.gasMetered >= REFUND_CEIL_GAS) fail(`gasMetered ${e.gasMetered} hit the ${REFUND_CEIL_GAS} clamp`);

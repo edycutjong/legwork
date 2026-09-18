@@ -46,8 +46,46 @@ contract BusyExecutor {
     }
 }
 
+/// Payer that refuses native USDC back (its own problem: it can never cancel).
+contract RefusingPayer {
+    Legwork public lw;
+    constructor(Legwork _lw) payable { lw = _lw; }
+    function create(address payee) external returns (uint256) { return lw.create{value: 0.05 ether}(payee, 0.01 ether, 60, 0.01 ether, 100 gwei); }
+    function cancel(uint256 id) external { lw.cancel(id); }
+    receive() external payable { revert("no"); }
+}
+
+/// Payer whose receive re-enters `execute` on another order while its own cancel is paying out.
+contract ReenteringPayer {
+    Legwork public lw;
+    uint256 public other;
+    bool public innerOk;
+    constructor(Legwork _lw) payable { lw = _lw; }
+    function create(address payee) external returns (uint256) { return lw.create{value: 0.05 ether}(payee, 0.01 ether, 60, 0.01 ether, 100 gwei); }
+    function cancel(uint256 id, uint256 _other) external { other = _other; lw.cancel(id); }
+    receive() external payable {
+        (bool ok,) = address(lw).call(abi.encodeWithSelector(Legwork.execute.selector, other));
+        innerOk = ok;
+    }
+}
+
+/// Payee that spends most of its 30k stipend and still accepts.
+contract HungryPayee {
+    uint256 public sink;
+    receive() external payable { sink += 1; } // one cold SSTORE (~22k) inside the 30k stipend
+}
+
+/// Executor that burns gas in its receive without re-entering.
+contract GasBurningExecutor {
+    Legwork public lw;
+    uint256 public sink;
+    constructor(Legwork _lw) { lw = _lw; }
+    function go(uint256 id) external { lw.execute(id); }
+    receive() external payable { sink += 1; } // ~22k of work after the measurement point
+}
+
 contract LegworkTest is Test {
-    uint256 constant OVERHEAD = 31_400;
+    uint256 constant OVERHEAD = 32_503; // the production constant (deploy/arc-mainnet.json)
     uint256 constant CEIL = 120_000;
     uint256 constant BASEFEE = 20 gwei;
 
@@ -465,6 +503,82 @@ contract LegworkTest is Test {
         vm.expectRevert(Legwork.NoOrder.selector);
         lw.priceCap(7);
         assertEq(lw.status(7), 0);
+    }
+
+    // ------------------------------------------------------------ audit-round additions
+
+    function test_topUp_rejectsUint128Overflow() public {
+        uint256 id = _live();
+        vm.deal(payer, type(uint256).max);
+        vm.prank(payer);
+        vm.expectRevert(Legwork.BadParams.selector);
+        lw.topUp{value: type(uint128).max}(id);
+    }
+
+    function test_create_rejectsDepositAboveUint128() public {
+        vm.deal(payer, type(uint256).max);
+        vm.prank(payer);
+        vm.expectRevert(Legwork.BadParams.selector);
+        lw.create{value: uint256(type(uint128).max) + 1}(payee, 0.01 ether, 60, 0, 100 gwei);
+    }
+
+    function test_cancel_revertsPayoutFailedForARefusingPayer() public {
+        RefusingPayer rp = new RefusingPayer{value: 1 ether}(lw);
+        uint256 id = rp.create(payee);
+        vm.expectRevert(Legwork.PayoutFailed.selector);
+        rp.cancel(id);
+        assertEq(_order(id).payer, address(rp), "order untouched; executors can still drain it by running it");
+    }
+
+    function test_cancel_reenteringPayerCannotBreakConservation() public {
+        // cancel deletes before it pays (CEI). A payer whose receive re-enters execute on another order just
+        // executes that order normally; the cancelled order is already gone and the balance stays conserved.
+        uint256 other = _live();
+        ReenteringPayer rp = new ReenteringPayer{value: 1 ether}(lw);
+        uint256 id = rp.create(payee);
+        uint256 before = address(lw).balance;
+        rp.cancel(id, other);
+        assertTrue(rp.innerOk(), "inner execute ran");
+        assertEq(_order(id).payer, address(0), "cancelled order is gone");
+        Legwork.Order memory o = _order(other);
+        assertEq(address(lw).balance, o.deposit, "contract balance == the one remaining deposit");
+        assertEq(before - address(lw).balance, 0.05 ether + 0.02 ether + 0.01 ether + (o.deposit == 0 ? 0 : (0.10 ether - 0.03 ether - o.deposit)), "returned + paid + tipped + refunded");
+    }
+
+    function test_execute_hungryPayeeWithinStipendIsPaidAndMetered() public {
+        HungryPayee hp = new HungryPayee();
+        uint256 id = _create(address(hp), 0.01 ether, 60, 0.01 ether, 100 gwei, 0.05 ether);
+        vm.recordLogs();
+        vm.prank(exec, exec);
+        lw.execute(id);
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        (uint256 metered,,,,, bool paid) = abi.decode(logs[0].data, (uint256, uint256, uint256, uint256, uint48, bool));
+        assertTrue(paid);
+        assertEq(hp.sink(), 1);
+        assertGt(metered, 20_000 + OVERHEAD, "the payee's SSTORE is inside the measured window -> refunded to the executor");
+        assertLt(metered, CEIL);
+    }
+
+    function test_execute_contractExecutorsReceiveIsNotMetered() public {
+        // same order shape, EOA executor vs a contract executor that does ~22k of work in its receive:
+        // the metered figure must not include that work (it runs after the measurement point).
+        uint256 warm = _live();
+        uint256 a = _live();
+        uint256 b = _live();
+        vm.prank(exec, exec);
+        lw.execute(warm); // the payee now exists and is warm for both measured runs (no 25k new-account cost)
+        vm.recordLogs();
+        vm.prank(exec, exec);
+        lw.execute(a);
+        (uint256 meteredEoa,,,,,) = abi.decode(vm.getRecordedLogs()[0].data, (uint256, uint256, uint256, uint256, uint48, bool));
+        GasBurningExecutor ge = new GasBurningExecutor(lw);
+        vm.recordLogs();
+        ge.go(b);
+        (uint256 meteredContract,,,,,) = abi.decode(vm.getRecordedLogs()[0].data, (uint256, uint256, uint256, uint256, uint48, bool));
+        assertEq(ge.sink(), 1);
+        // the difference is only the warm/cold access pattern of the two callers, never the 22k SSTORE
+        uint256 diff = meteredContract > meteredEoa ? meteredContract - meteredEoa : meteredEoa - meteredContract;
+        assertLt(diff, 5_000, "receive work is not in the metered window");
     }
 
     // ------------------------------------------------------------ fuzz

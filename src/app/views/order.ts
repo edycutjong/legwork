@@ -39,7 +39,9 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
     const cap = priceCapAt(order.maxGasPrice, hd.basefee);
     const secs = Number(order.nextDue - now);
     const isPayer = wallet()?.address.toLowerCase() === order.payer.toLowerCase();
+    const owed = st === 'Due' && order.interval > 0n ? (now - order.nextDue) / order.interval + 1n : 0n;
     const cd = h('div', { class: `countdown ${st === 'Due' ? 'due' : 'waiting'}`, 'aria-live': 'polite' }, st === 'Paused' ? 'paused' : st === 'Underfunded' ? 'underfunded' : countdown(secs));
+    const owedNote = owed > 1n ? h('p', { class: 'muted', style: 'font-size:13px;margin-top:-4px' }, `${owed} periods are owed — the schedule is anchored, so each execute pays one period and the next is due immediately until it has caught up.`) : '';
     const runBtn = h('button', { class: 'btn wide', type: 'button', disabled: st !== 'Due' }, st === 'Due' ? 'Execute — anyone can' : st === 'Waiting' ? 'Execute (not due yet)' : st === 'Paused' ? 'Paused' : 'Underfunded');
     const runNote = h('p', { class: 'muted', style: 'margin-top:8px;font-size:13px' });
     const runStatus = h('div');
@@ -49,6 +51,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
       h('div', { style: 'display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap' }, h('h2', {}, `Order #${id}`), badge(st)),
       h('p', { class: 'lede' }, `${usdc18(order.amount)} USDC to `, chip(order.payee), ` every ${order.interval} s · tip ${usdc18(order.tip)} USDC to whoever runs it`),
       cd,
+      owedNote,
       h('dl', { class: 'kv' },
         h('dt', {}, 'next run due'), h('dd', {}, `${new Date(Number(order.nextDue) * 1000).toISOString().replace('T', ' ').slice(0, 19)} UTC`),
         h('dt', {}, 'deposit'), h('dd', {}, `${usdc18(order.deposit)} USDC`, h('small', { class: 'muted' }, ` · ${order.deposit} wei`)),
@@ -57,7 +60,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
         h('dt', {}, 'payer'), h('dd', {}, chip(order.payer), isPayer ? ' (you)' : ''),
         h('dt', {}, 'created at block'), h('dd', {}, String(order.createdBlock)),
       ),
-      st === 'Underfunded' ? notice('info', `Top up at least ${usdc18(needed - order.deposit)} USDC to make the next run possible. Nothing is paid partially — the contract reverts Underfunded instead.`) : '',
+      st === 'Underfunded' ? notice('info', `Top up at least ${usdc18(needed - order.deposit)} USDC to make the next run possible. Nothing is paid partially — the contract reverts Underfunded instead. Periods missed while underfunded stay owed and are caught up one per execute after the top-up.`) : '',
       st === 'Paused' ? notice('error', 'The payee refused the last payment, so the order paused. The unpaid amount stayed in the deposit and the executor who found out was still repaid and tipped. The payer can resume or cancel.') : '',
       runBtn, runNote, runStatus,
       isPayer ? payerControls(st) : '',

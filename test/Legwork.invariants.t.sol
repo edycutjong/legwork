@@ -181,7 +181,7 @@ contract LegworkInvariants is Test {
     Handler h;
 
     function setUp() public {
-        lw = new Legwork(31_400);
+        lw = new Legwork(32_503);
         vm.fee(20 gwei);
         vm.txGasPrice(20 gwei);
         vm.warp(1_700_000_000);
