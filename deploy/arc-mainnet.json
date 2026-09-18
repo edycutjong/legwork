@@ -97,6 +97,24 @@
       },
       "firstRun": "0x76d508646679f86e55fbd50fe05b614a61cfa2cfa2721162abe7665f92343eaf",
       "firstRunBlock": 21487566
+    },
+    "pageTest": {
+      "id": 4,
+      "create": "0x32e3c9d59d25d31b2f01000cf1fb4f636389ae2ca3116b170e13e6ea0d59f5c8",
+      "createBlock": 21488935,
+      "firstRun": "0xbe115310fd76f686c2bc8ee6a3d846f3c5a39561522898d166834d9047736149",
+      "firstRunBlock": 21488938,
+      "cancel": "0x17942d06a5be8bee2f02ee379a15ef4d1c8818d62b6ce69a56da90a60b9b786f",
+      "cancelBlock": 21488947,
+      "params": {
+        "payee": "0x352e5cDea885DBCAbe850259CA8AA6759b5aAA60",
+        "amount": "1000000000000000",
+        "interval": 60,
+        "tip": "1000000000000000",
+        "maxGasPrice": "100000000000",
+        "deposit": "8800000000000000"
+      },
+      "note": "created, executed and cancelled through the page's own code path (form -> Execute button -> Cancel) with an injected provider forwarding eth_sendTransaction to cast; the hero flow timed at ~40 s create->receipt"
     }
   }
 }
