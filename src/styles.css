@@ -11,8 +11,9 @@
   --repaid: #1E6F48;
   --owed: #A3282A;
   --wait: #77590C;
-  --sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
-  --mono: "IBM Plex Mono", "Courier New", Courier, monospace;
+  /* system stacks only: the page makes exactly one kind of network request, JSON-RPC to Arc */
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.5 var(--sans); }
