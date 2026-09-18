@@ -1,0 +1,29 @@
+{
+  "name": "legwork-arc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Standing USDC orders on Arc that anyone can execute and be repaid the metered gas + tip from the order's deposit.",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "orders": "tsx scripts/orders.ts",
+    "bench": "tsx scripts/meter-bench.ts",
+    "recheck": "tsx scripts/recheck-receipts.ts",
+    "preflight": "python3 scripts/preflight.py"
+  },
+  "dependencies": {
+    "viem": "^2.37.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0",
+    "vitest": "^3.0.0"
+  }
+}
