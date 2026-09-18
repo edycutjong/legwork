@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/mark.svg" alt="Legwork" width="72" height="72">
+<img src="docs/assets/icon.svg" alt="Legwork — a torn receipt on which an ink stride walks the payment out and a copper stroke returns the exact gas to whoever ran it" width="96" height="96">
 
 # Legwork
 
@@ -25,6 +25,10 @@ dollar, so the refund is arithmetic.
 ![license](https://img.shields.io/badge/license-MIT-blue?style=flat)
 
 </div>
+
+<p align="center">
+  <img src="docs/assets/readme-hero-animated.svg" alt="Legwork — one transaction splits the order's ink deposit: payment to the payee, exact copper gas back to whoever ran it" width="100%">
+</p>
 
 ---
 

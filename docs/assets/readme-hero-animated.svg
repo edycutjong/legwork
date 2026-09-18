@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" width="1280" height="320" role="img" aria-label="Legwork — one transaction splits the order's ink deposit: payment to the payee, exact copper gas back to whoever ran it">
+<!-- STORYBOARD (dur 8s — must equal this file's single master dur)
+  0-10%   steady state: plate, mark, wordmark, tagline, metric line, tech line; the receipt card on the right shows Order #5 DUE with its deposit line whole
+  10-25%  trigger:      "Execute — anyone" is pressed: a copper ring pulses from the button                    data-story="beat-2"
+  25-55%  mechanism:    One transaction splits the order's ink deposit: payment to the payee, exact copper gas back to whoever ran it.   data-story="beat-3"
+  55-80%  resolution:   the receipt's lines reveal: metered 58,415 · used 58,415 · drift 0 · net = tip; the copper packet has landed on the executor and stays   data-story="beat-4"
+  80-100% breathe + seam fade (the story layer fades 96–100 % and in 0–2 %)
+-->
+  <defs>
+    <linearGradient id="cu" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#C05A24"/><stop offset="55%" stop-color="#A4471A"/><stop offset="100%" stop-color="#7A3410"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FFFDF8" stop-opacity="0"/><stop offset="50%" stop-color="#FFFDF8" stop-opacity="0.75"/><stop offset="100%" stop-color="#FFFDF8" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FFFDF8" stop-opacity="0"/><stop offset="50%" stop-color="#FFFDF8" stop-opacity="0.55"/><stop offset="100%" stop-color="#FFFDF8" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="lines" width="8" height="26" patternUnits="userSpaceOnUse">
+      <rect width="8" height="26" fill="none"/><circle cx="2" cy="25" r="0.9" fill="#1C1A16" fill-opacity="0.10"/>
+    </pattern>
+    <filter id="blur1" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="40"/></filter>
+    <filter id="blur2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="10"/></filter>
+    <clipPath id="plateClip"><rect x="0" y="0" width="1280" height="320" rx="20"/></clipPath>
+    <clipPath id="workClip"><path transform="translate(294.2, 128)" d="M5.7 0L0.6-43.3L10.9-43.3L14.0-8.2L14.9-8.2L20.0-43.3L30.9-43.3L36.0-8.2L36.8-8.2L40.0-43.3L49.8-43.3L44.7 0L29.9 0L25.6-29.9L24.8-29.9L20.5 0L5.7 0ZM75.6 1.0L75.6 1.0Q70.6 1.0 66.5-0.5Q62.5-2.1 59.7-5.0Q56.9-8.0 55.4-12.2Q53.8-16.4 53.8-21.7L53.8-21.7Q53.8-27.0 55.4-31.2Q56.9-35.4 59.7-38.3Q62.5-41.2 66.5-42.8Q70.6-44.4 75.6-44.4L75.6-44.4Q80.6-44.4 84.7-42.8Q88.7-41.2 91.5-38.3Q94.3-35.4 95.8-31.2Q97.4-27.0 97.4-21.7L97.4-21.7Q97.4-16.4 95.8-12.2Q94.3-8.0 91.5-5.0Q88.7-2.1 84.7-0.5Q80.6 1.0 75.6 1.0ZM75.6-8.2L75.6-8.2Q79.8-8.2 82.2-10.8Q84.5-13.4 84.5-18.2L84.5-18.2L84.5-25.1Q84.5-29.9 82.2-32.5Q79.8-35.1 75.6-35.1L75.6-35.1Q71.4-35.1 69.0-32.5Q66.7-29.9 66.7-25.1L66.7-25.1L66.7-18.2Q66.7-13.4 69.0-10.8Q71.4-8.2 75.6-8.2ZM107.0 0L107.0-9.7L117.0-9.7L117.0-33.7L107.0-33.7L107.0-43.3L129.4-43.3L129.4-31.1L130.0-31.1Q130.6-33.4 131.7-35.7Q132.7-37.9 134.4-39.6Q136.0-41.3 138.3-42.3Q140.7-43.3 143.9-43.3L143.9-43.3L148.0-43.3L148.0-31.9L138.8-31.9Q134.1-31.9 131.8-29.2Q129.4-26.5 129.4-22.5L129.4-22.5L129.4-9.7L143.7-9.7L143.7 0L107.0 0ZM156.7 0L156.7-62.2L169.1-62.2L169.1-26.9L169.7-26.9L175.5-33.7L184.5-43.3L198.8-43.3L182.0-26.2L200.6 0L185.8 0L173.2-19.2L169.1-15.0L169.1 0L156.7 0Z"/></clipPath>
+    <path id="toPayee" d="M905 118 C1000 118 1060 118 1150 118"/>
+    <path id="toExec"  d="M870 130 C820 140 740 150 705 176"/>
+  </defs>
+  <style>
+    @keyframes driftA { from { transform: translate(0,0); } to { transform: translate(60px, 24px); } }
+    @keyframes driftB { from { transform: translate(0,0); } to { transform: translate(-50px, -20px); } }
+    .auroraA { animation: driftA 16s ease-in-out infinite alternate; }
+    .auroraB { animation: driftB 19s ease-in-out infinite alternate; }
+    @keyframes metricPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.62; } }
+    .metric { animation: metricPulse 8s ease-in-out infinite; }
+    @keyframes markStep { 0%, 10% { transform: translate(0,0); } 14% { transform: translate(0,-24px); } 18%, 100% { transform: translate(0,0); } }
+    .mark { animation: markStep 8s ease-out infinite; }
+    @keyframes btnPress { 0%, 10% { transform: scale(1); } 13% { transform: scale(0.94); } 17%, 100% { transform: scale(1); } }
+    .btn { transform-box: fill-box; transform-origin: center; animation: btnPress 8s cubic-bezier(.2,1.4,.4,1) infinite; }
+    .sys { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <!-- plate (mandatory: self-sufficient on light and dark GitHub) -->
+  <rect x="0" y="0" width="1280" height="320" rx="20" fill="#F7F3EA" stroke="#D8D0BE"/>
+  <g clip-path="url(#plateClip)">
+    <rect x="0" y="0" width="1280" height="320" fill="url(#lines)"/>
+    <g class="auroraA"><circle cx="180" cy="40" r="170" fill="#A4471A" fill-opacity="0.16" filter="url(#blur1)"/></g>
+    <g class="auroraB"><circle cx="1180" cy="300" r="150" fill="#1E6F48" fill-opacity="0.12" filter="url(#blur1)"/></g>
+    <rect x="-400" y="-40" width="220" height="400" fill="url(#beam)" transform="skewX(-18)">
+      <animate attributeName="x" dur="8s" repeatCount="indefinite" keyTimes="0;0.10;0.40;1" values="-400;-400;1500;1500"/>
+    </rect>
+  </g>
+
+  <!-- ===== left: brand (all visible at t = 0) ===== -->
+  <g transform="translate(40, 46) scale(0.17)"><g class="mark">
+    <path d="M108 40 H404 Q440 40 440 76 V434 L417 456 L394 434 L371 456 L348 434 L325 456 L302 434 L279 456 L256 434 L233 456 L210 434 L187 456 L164 434 L141 456 L118 434 L95 456 L72 434 V76 Q72 40 108 40 Z" fill="#FFFDF8" stroke="#1C1A16" stroke-width="14" stroke-linejoin="round"/>
+    <path d="M148 300 L220 176 L284 248 L362 140" fill="none" stroke="#1C1A16" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M362 140 C446 214 418 322 300 326 C232 328 186 318 158 300" fill="none" stroke="#A4471A" stroke-width="22" stroke-linecap="round"/>
+    <path d="M190 268 L148 300 L196 318" fill="none" stroke="#A4471A" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+    <g stroke="#A4471A" stroke-width="10" stroke-linecap="round"><line x1="300" y1="386" x2="392" y2="386"/><line x1="300" y1="406" x2="392" y2="406"/></g>
+  </g></g>
+  <!-- outlined wordmark: IBM Plex Mono 700 via opentype.js (wordmarks.json) -->
+  <path transform="translate(138, 128)" d="M45.6 0L7.7 0L7.7-58.6L20.4-58.6L20.4-10.3L45.6-10.3L45.6 0ZM76.8 1.0L76.8 1.0Q65.9 1.0 60.2-5.0Q54.6-11.1 54.6-21.5L54.6-21.5Q54.6-26.8 56.1-31.0Q57.5-35.3 60.3-38.3Q63.0-41.2 66.9-42.8Q70.8-44.4 75.7-44.4L75.7-44.4Q80.6-44.4 84.4-42.8Q88.3-41.2 91.0-38.4Q93.7-35.5 95.1-31.5Q96.6-27.4 96.6-22.3L96.6-22.3L96.6-18.6L66.9-18.6L66.9-17.9Q66.9-13.7 69.6-11.1Q72.2-8.6 77.2-8.6L77.2-8.6Q81.1-8.6 83.8-10.0Q86.6-11.5 88.6-13.9L88.6-13.9L95.3-6.6Q92.8-3.5 88.3-1.3Q83.7 1.0 76.8 1.0ZM75.8-35.4L75.8-35.4Q71.7-35.4 69.3-33.0Q66.9-30.5 66.9-26.3L66.9-26.3L66.9-25.6L84.4-25.6L84.4-26.3Q84.4-30.6 82.1-33.0Q79.8-35.4 75.8-35.4ZM149.8 4.4L149.8 4.4Q149.8 11.3 144.0 14.5Q138.2 17.8 125.7 17.8L125.7 17.8Q119.5 17.8 115.5 17.1Q111.5 16.4 109.1 15.0Q106.7 13.7 105.7 11.8Q104.7 10.0 104.7 7.8L104.7 7.8Q104.7 4.1 106.9 2.2Q109.1 0.3 113.1-0.7L113.1-0.7L113.1-1.2Q110.3-2.0 108.7-3.6Q107.0-5.1 107.0-8.0L107.0-8.0Q107.0-11.2 109.2-12.7Q111.3-14.2 114.8-15.0L114.8-15.0L114.8-15.5Q111.0-17.4 108.8-20.7Q106.7-24.1 106.7-28.9L106.7-28.9Q106.7-32.7 108.0-35.6Q109.4-38.5 111.8-40.4Q114.3-42.3 117.8-43.3Q121.2-44.4 125.5-44.4L125.5-44.4Q129.6-44.4 133.1-43.4L133.1-43.4L133.1-45.8Q133.1-48.3 134.9-50.0Q136.7-51.7 139.8-51.7L139.8-51.7L147.4-51.7L147.4-42.6L137.0-42.6L137.0-41.8Q140.5-40.0 142.5-36.8Q144.5-33.5 144.5-28.9L144.5-28.9Q144.5-25.1 143.1-22.3Q141.8-19.4 139.3-17.4Q136.8-15.5 133.3-14.4Q129.8-13.4 125.5-13.4L125.5-13.4Q123.6-13.4 121.8-13.7Q120.0-13.9 118.4-14.3L118.4-14.3Q117.5-13.8 116.9-13.0Q116.3-12.3 116.3-11.1L116.3-11.1Q116.3-10.1 116.8-9.5Q117.3-8.9 118.1-8.6Q119.0-8.3 120.2-8.2Q121.4-8.1 122.6-8.1L122.6-8.1L132.6-8.1Q137.2-8.1 140.4-7.2Q143.7-6.3 145.8-4.6Q147.9-2.9 148.8-0.7Q149.8 1.6 149.8 4.4ZM138.0 5.3L138.0 5.3Q138.0 3.6 136.7 2.6Q135.3 1.7 131.5 1.7L131.5 1.7L116.7 1.7Q115.0 3.1 115.0 5.2L115.0 5.2Q115.0 7.2 116.7 8.5Q118.4 9.8 122.6 9.8L122.6 9.8L129.9 9.8Q134.1 9.8 136.1 8.7Q138.0 7.5 138.0 5.3ZM125.5-21.3L125.5-21.3Q129.3-21.3 131.0-23.2Q132.7-25.0 132.7-27.9L132.7-27.9L132.7-29.9Q132.7-32.8 131.0-34.6Q129.3-36.5 125.5-36.5L125.5-36.5Q121.8-36.5 120.1-34.6Q118.4-32.8 118.4-29.9L118.4-29.9L118.4-27.9Q118.4-25.0 120.1-23.2Q121.8-21.3 125.5-21.3Z" fill="#1C1A16"/>
+  <path transform="translate(294.2, 128)" d="M5.7 0L0.6-43.3L10.9-43.3L14.0-8.2L14.9-8.2L20.0-43.3L30.9-43.3L36.0-8.2L36.8-8.2L40.0-43.3L49.8-43.3L44.7 0L29.9 0L25.6-29.9L24.8-29.9L20.5 0L5.7 0ZM75.6 1.0L75.6 1.0Q70.6 1.0 66.5-0.5Q62.5-2.1 59.7-5.0Q56.9-8.0 55.4-12.2Q53.8-16.4 53.8-21.7L53.8-21.7Q53.8-27.0 55.4-31.2Q56.9-35.4 59.7-38.3Q62.5-41.2 66.5-42.8Q70.6-44.4 75.6-44.4L75.6-44.4Q80.6-44.4 84.7-42.8Q88.7-41.2 91.5-38.3Q94.3-35.4 95.8-31.2Q97.4-27.0 97.4-21.7L97.4-21.7Q97.4-16.4 95.8-12.2Q94.3-8.0 91.5-5.0Q88.7-2.1 84.7-0.5Q80.6 1.0 75.6 1.0ZM75.6-8.2L75.6-8.2Q79.8-8.2 82.2-10.8Q84.5-13.4 84.5-18.2L84.5-18.2L84.5-25.1Q84.5-29.9 82.2-32.5Q79.8-35.1 75.6-35.1L75.6-35.1Q71.4-35.1 69.0-32.5Q66.7-29.9 66.7-25.1L66.7-25.1L66.7-18.2Q66.7-13.4 69.0-10.8Q71.4-8.2 75.6-8.2ZM107.0 0L107.0-9.7L117.0-9.7L117.0-33.7L107.0-33.7L107.0-43.3L129.4-43.3L129.4-31.1L130.0-31.1Q130.6-33.4 131.7-35.7Q132.7-37.9 134.4-39.6Q136.0-41.3 138.3-42.3Q140.7-43.3 143.9-43.3L143.9-43.3L148.0-43.3L148.0-31.9L138.8-31.9Q134.1-31.9 131.8-29.2Q129.4-26.5 129.4-22.5L129.4-22.5L129.4-9.7L143.7-9.7L143.7 0L107.0 0ZM156.7 0L156.7-62.2L169.1-62.2L169.1-26.9L169.7-26.9L175.5-33.7L184.5-43.3L198.8-43.3L182.0-26.2L200.6 0L185.8 0L173.2-19.2L169.1-15.0L169.1 0L156.7 0Z" fill="url(#cu)"/>
+  <g clip-path="url(#workClip)">
+    <rect x="-200" y="40" width="90" height="120" fill="url(#shine)" transform="skewX(-20)">
+      <animate attributeName="x" dur="8s" repeatCount="indefinite" keyTimes="0;0.55;0.75;1" values="-200;-200;760;760"/>
+    </rect>
+  </g>
+  <text class="sys" x="40" y="176" font-size="19" fill="#1C1A16">Standing USDC orders anyone can run — repaid the exact gas,</text>
+  <text class="sys" x="40" y="200" font-size="19" fill="#1C1A16">same dollar, same transaction. No oracle, no keeper network.</text>
+  <text class="mono metric" x="40" y="236" font-size="15" fill="#A4471A">drift 0 gas · 30/30 mainnet runs · refund ÷ fee 1.000000</text>
+  <text class="mono" x="40" y="264" font-size="12.5" fill="#5E574B">Arc mainnet 5042 · Solidity 0.8.30 · Foundry · viem · EIP-7708 · MIT</text>
+
+  <!-- ===== right: the story — a receipt card ===== -->
+  <g transform="translate(640, 26)">
+    <path d="M12 0 H588 Q600 0 600 12 V256 L588 268 L576 256 L564 268 L552 256 L540 268 L528 256 L516 268 L504 256 L492 268 L480 256 L468 268 L456 256 L444 268 L432 256 L420 268 L408 256 L396 268 L384 256 L372 268 L360 256 L348 268 L336 256 L324 268 L312 256 L300 268 L288 256 L276 268 L264 256 L252 268 L240 256 L228 268 L216 256 L204 268 L192 256 L180 268 L168 256 L156 268 L144 256 L132 268 L120 256 L108 268 L96 256 L84 268 L72 256 L60 268 L48 256 L36 268 L24 256 L12 268 L0 256 V12 Q0 0 12 0 Z" fill="#FFFDF8" stroke="#D8D0BE"/>
+    <text class="mono" x="22" y="30" font-size="13" fill="#5E574B">Order #5 · 0.001 USDC / 60 s · tip 0.001</text>
+    <!-- DUE / PAID badge -->
+    <g>
+      <rect x="518" y="14" width="62" height="22" rx="11" fill="none" stroke="#1E6F48"/>
+      <text class="mono" x="549" y="29" font-size="11" fill="#1E6F48" text-anchor="middle" letter-spacing="1">DUE</text>
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite" keyTimes="0;0.55;0.58;0.96;1" values="1;1;0;0;1"/>
+    </g>
+    <g data-story="beat-4" opacity="0">
+      <rect x="518" y="14" width="62" height="22" rx="11" fill="#1E6F48"/>
+      <text class="mono" x="549" y="29" font-size="11" fill="#FFFDF8" text-anchor="middle" letter-spacing="1">PAID</text>
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite" keyTimes="0;0.55;0.58;0.96;1" values="0;0;1;1;0"/>
+    </g>
+    <line x1="22" y1="44" x2="578" y2="44" stroke="#D8D0BE" stroke-dasharray="1 5"/>
+
+    <!-- executor node (left) · deposit bar (centre) · payee node (right) -->
+    <g transform="translate(0, 0)">
+      <circle cx="60" cy="150" r="26" fill="#FFFDF8" stroke="#A4471A" stroke-width="2"/>
+      <text class="mono" x="60" y="154" font-size="11" fill="#A4471A" text-anchor="middle">anyone</text>
+      <text class="mono" x="60" y="196" font-size="11" fill="#5E574B" text-anchor="middle">executor</text>
+      <circle data-story="beat-4" cx="60" cy="150" r="30" fill="none" stroke="#A4471A" stroke-width="6" filter="url(#blur2)" opacity="0"><animate attributeName="opacity" dur="8s" repeatCount="indefinite" keyTimes="0;0.55;0.62;0.80;0.96;1" values="0;0;0.45;0.25;0.15;0"/></circle>
+      <!-- copper ring pulse from the button (beat 2) -->
+      <circle data-story="beat-2" cx="60" cy="150" r="26" fill="none" stroke="#A4471A" stroke-width="3" opacity="0">
+        <animate attributeName="r" dur="8s" repeatCount="indefinite" keyTimes="0;0.10;0.25;1" values="26;26;70;70"/>
+        <animate attributeName="opacity" dur="8s" repeatCount="indefinite" keyTimes="0;0.10;0.12;0.25;1" values="0;0;0.9;0;0"/>
+      </circle>
+    </g>
+    <!-- deposit: the ink line, whole at t = 0 -->
+    <text class="mono" x="228" y="78" font-size="11" fill="#5E574B">deposit 0.0088 USDC (native)</text>
+    <rect x="228" y="84" width="170" height="16" rx="3" fill="#1C1A16"/>
+    <!-- payee node -->
+    <circle cx="510" cy="92" r="26" fill="#FFFDF8" stroke="#1E6F48" stroke-width="2"/>
+    <text class="mono" x="510" y="96" font-size="11" fill="#1E6F48" text-anchor="middle">payee</text>
+    <!-- the split (beat 3): a slice of the deposit slides to the payee, the copper slice returns to the executor -->
+    <rect data-story="beat-3" x="380" y="84" width="18" height="16" rx="3" fill="#1C1A16" opacity="0">
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite" keyTimes="0;0.25;0.27;0.55;0.96;1" values="0;0;1;1;1;0"/>
+      <animate attributeName="x" dur="8s" repeatCount="indefinite" keyTimes="0;0.25;0.42;1" values="380;380;458;458"/>
+    </rect>
+    <text data-story="beat-3" class="mono" x="482" y="134" font-size="11" fill="#1E6F48" text-anchor="middle" opacity="0">+0.001<animate attributeName="opacity" dur="8s" repeatCount="indefinite" keyTimes="0;0.42;0.45;0.96;1" values="0;0;1;1;0"/></text>
+    <rect data-story="beat-3" x="352" y="84" width="28" height="16" rx="3" fill="#A4471A" opacity="0">
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite" keyTimes="0;0.27;0.29;0.55;0.96;1" values="0;0;1;1;1;0"/>
+      <animate attributeName="x" dur="8s" repeatCount="indefinite" keyTimes="0;0.29;0.50;1" values="352;352;92;92"/>
+      <animate attributeName="y" dur="8s" repeatCount="indefinite" keyTimes="0;0.29;0.50;1" values="84;84;142;142"/>
+    </rect>
+    <rect x="228" y="84" width="170" height="16" rx="3" fill="#FFFDF8" opacity="0" data-story="beat-3">
+      <!-- the deposit visibly shrinks: a paper mask grows over the spent slices -->
+      <animate attributeName="opacity" dur="8s" repeatCount="indefinite" keyTimes="0;0.27;0.29;0.96;1" values="0;0;1;1;0"/>
+      <animate attributeName="x" dur="8s" repeatCount="indefinite" keyTimes="0;0.29;0.50;1" values="398;398;352;352"/>
+      <animate attributeName="width" dur="8s" repeatCount="indefinite" keyTimes="0;0.29;0.50;1" values="0;0;46;46"/>
+    </rect>
+    <text data-story="beat-3" class="mono" x="22" y="116" font-size="11" fill="#A4471A" opacity="0">+0.0011683 gas · +0.001 tip<animate attributeName="opacity" dur="8s" repeatCount="indefinite" keyTimes="0;0.50;0.53;0.96;1" values="0;0;1;1;0"/></text>
+    <!-- execute button (beat 2) -->
+    <g class="btn">
+      <rect x="22" y="212" width="150" height="34" rx="6" fill="#A4471A"/>
+      <text class="sys" x="97" y="234" font-size="13" font-weight="600" fill="#FFFDF8" text-anchor="middle">Execute — anyone</text>
+    </g>
+    <!-- receipt lines (beat 4) -->
+    <g class="mono" font-size="12" fill="#1C1A16">
+      <text data-story="beat-4" x="228" y="150" opacity="0">gasUsed        58,415<animate attributeName="opacity" dur="8s" repeatCount="indefinite" keyTimes="0;0.56;0.58;0.96;1" values="0;0;1;1;0"/></text>
+      <text data-story="beat-4" x="228" y="170" opacity="0">gasMetered     58,415<animate attributeName="opacity" dur="8s" repeatCount="indefinite" keyTimes="0;0.59;0.61;0.96;1" values="0;0;1;1;0"/></text>
+      <text data-story="beat-4" x="228" y="190" opacity="0" fill="#A4471A">drift               0<animate attributeName="opacity" dur="8s" repeatCount="indefinite" keyTimes="0;0.62;0.64;0.96;1" values="0;0;1;1;0"/></text>
+      <text data-story="beat-4" x="228" y="210" opacity="0" fill="#A4471A">refund ÷ fee 1.000000<animate attributeName="opacity" dur="8s" repeatCount="indefinite" keyTimes="0;0.65;0.67;0.96;1" values="0;0;1;1;0"/></text>
+      <text data-story="beat-4" x="228" y="230" opacity="0" fill="#1E6F48">executor net   = tip<animate attributeName="opacity" dur="8s" repeatCount="indefinite" keyTimes="0;0.68;0.70;0.96;1" values="0;0;1;1;0"/></text>
+    </g>
+    <text data-story="beat-3" class="mono" x="400" y="248" font-size="10.5" fill="#5E574B" opacity="0">same dollar · same tx · no oracle<animate attributeName="opacity" dur="8s" repeatCount="indefinite" keyTimes="0;0.30;0.34;0.96;1" values="0;0;1;1;0"/></text>
+  </g>
+</svg>

@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Legwork — one transaction splits the order's ink deposit: payment to the payee, exact copper gas back to whoever ran it">
+<!-- STORYBOARD (dur 6s — must equal this file's single master dur)
+  0-10%   steady state: the receipt plate, its torn edge, the ink stride, the copper return and the meter tick all visible (poster rule)
+  10-25%  trigger:      the stride re-draws itself left → right — the executor steps in                              data-story="beat-2"
+  25-55%  mechanism:    One transaction splits the order's ink deposit: payment to the payee, exact copper gas back to whoever ran it.   data-story="beat-3"
+  55-80%  resolution:   the copper stroke stays; the meter tick under it pops "=" and holds                          data-story="beat-4"
+  80-100% breathe (copper glow wave) + seam fade of the story layer
+-->
+  <defs>
+    <linearGradient id="copper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#A4471A"/>
+      <stop offset="100%" stop-color="#7A3410"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#1C1A16" flood-opacity="0.18"/>
+    </filter>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+    <path id="returnPath" pathLength="100" d="M362 140 C446 214 418 322 300 326 C232 328 186 318 158 300"/>
+  </defs>
+  <style>
+    @keyframes tickpop { 0%, 55% { transform: scale(1); } 58% { transform: scale(1.35); } 62%, 100% { transform: scale(1); } }
+    .tick { transform-box: fill-box; transform-origin: center; animation: tickpop 6s cubic-bezier(.2,1.4,.4,1) infinite; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+  </style>
+
+  <!-- brand layer: fully visible at t = 0 -->
+  <path filter="url(#soft)"
+        d="M108 40 H404 Q440 40 440 76 V434 L417 456 L394 434 L371 456 L348 434 L325 456 L302 434 L279 456 L256 434 L233 456 L210 434 L187 456 L164 434 L141 456 L118 434 L95 456 L72 434 V76 Q72 40 108 40 Z"
+        fill="#FFFDF8" stroke="#1C1A16" stroke-width="14" stroke-linejoin="round"/>
+  <g stroke="#D8D0BE" stroke-width="4" stroke-dasharray="1 10" stroke-linecap="round">
+    <line x1="120" y1="360" x2="392" y2="360"/>
+    <line x1="120" y1="396" x2="392" y2="396"/>
+  </g>
+
+  <!-- glow breath under the copper return (story layer: starts invisible) -->
+  <use href="#returnPath" data-story="beat-4" opacity="0" fill="none" stroke="#A4471A" stroke-width="30" stroke-linecap="round" filter="url(#glow)">
+    <animate attributeName="opacity" dur="6s" repeatCount="indefinite" keyTimes="0;0.55;0.62;0.80;0.96;1" values="0;0;0.55;0.35;0.2;0"/>
+  </use>
+
+  <!-- the stride: visible at t = 0, snaps back and re-draws itself at the trigger -->
+  <path d="M148 300 L220 176 L284 248 L362 140" pathLength="100" fill="none" stroke="#1C1A16" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="100" stroke-dashoffset="0">
+    <animate attributeName="stroke-dashoffset" dur="6s" repeatCount="indefinite" keyTimes="0;0.10;0.10;0.25;1" values="0;0;100;0;0"/>
+  </path>
+
+  <!-- the return: copper gas back to where the stride began (beat 3) -->
+  <use href="#returnPath" fill="none" stroke="url(#copper)" stroke-width="22" stroke-linecap="round" stroke-dasharray="100" stroke-dashoffset="0">
+    <animate attributeName="stroke-dashoffset" dur="6s" repeatCount="indefinite" keyTimes="0;0.10;0.10;0.25;0.55;1" values="0;0;100;100;0;0"/>
+  </use>
+  <path d="M190 268 L148 300 L196 318" fill="none" stroke="url(#copper)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round">
+    <animate attributeName="opacity" dur="6s" repeatCount="indefinite" keyTimes="0;0.10;0.10;0.53;0.56;1" values="1;1;0;0;1;1"/>
+  </path>
+  <!-- the copper packet riding the return (story layer) -->
+  <circle data-story="beat-3" r="17" fill="#A4471A" opacity="0">
+    <animate attributeName="opacity" dur="6s" repeatCount="indefinite" keyTimes="0;0.25;0.27;0.53;0.56;1" values="0;0;1;1;0;0"/>
+    <animateMotion dur="6s" repeatCount="indefinite" keyPoints="0;0;1;1" keyTimes="0;0.25;0.55;1" calcMode="linear">
+      <mpath href="#returnPath"/>
+    </animateMotion>
+  </circle>
+
+  <!-- the meter tick: metered = used (pops at beat 4, CSS on the master duration) -->
+  <g class="tick" stroke="#A4471A" stroke-width="10" stroke-linecap="round">
+    <line x1="300" y1="386" x2="392" y2="386"/>
+    <line x1="300" y1="406" x2="392" y2="406"/>
+  </g>
+</svg>
