@@ -20,5 +20,10 @@ for (const [name, width, height] of [['mobile', 375, 740], ['tablet', 768, 1024]
     await page.goto('/#/judge');
     await expect(page.locator('.judge')).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+    // the runs table on an order sheet is the widest thing in the app — it must scroll inside its card
+    await page.goto('/#/o/1');
+    await expect(page.locator('.runs table, .runs .notice, .runs p.muted').first()).toBeVisible({ timeout: 40_000 });
+    await page.waitForTimeout(500);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   });
 }

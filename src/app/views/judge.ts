@@ -27,7 +27,7 @@ export function renderJudge(root: HTMLElement) {
         step('Open the seeded order ', link(`#/o/${live}`, `#/o/${live}`), ' — it is Due; the card quotes the deposit, the reserve and the refund cap from the latest base fee.'),
         step('Press ', h('strong', {}, 'Execute — anyone can'), ' with any wallet holding a few cents of USDC on Arc (the page offers to add the chain). One transaction.'),
         step('Read the receipt: the payee’s amount, your refund (', h('code', {}, 'gasMetered × price'), '), the tip, the real fee from the receipt, and the drift between them — printed side by side, decoded in the browser.'),
-        step('No wallet? Open the committed hero run ', link(`#/o/5/tx/${HERO_TX}`, 'order #5 · 0x2f6a…0c95'), ' — the same receipt, read from the chain (the order has since been cancelled; the receipt has not).'),
+        step('No wallet? Open the committed hero run ', link(`#/o/5/tx/${HERO_TX}`, '#/o/5/tx/0x2f6a…0c95'), ' — the same receipt, read from the chain (the order has since been cancelled; the receipt has not).'),
       ),
 
       h('h3', {}, 'Receipts'),
@@ -37,7 +37,7 @@ export function renderJudge(root: HTMLElement) {
         h('dt', {}, 'bench'), h('dd', {}, '30 consecutive real executes, 1-second periods: drift 0 on 30/30, refund ÷ fee 1.000000 on 30/30, gasUsed p50 = p95 = 58,415; 5 rows by the payee collecting its own payment'),
         h('dt', {}, 'branches'), h('dd', {}, 'refusing payee → ', link(explorerTx(PAUSED_TX), 'Paused, executor still repaid'), ' · not due → ', link(explorerTx(NOTDUE_TX), 'revert, 24,323 gas'), ' · capped price → ', link(explorerTx(CAPPED_TX), 'executor eats the difference'), ' · first live run ', link(explorerTx(LIVE_TX), '0x0a598c84…d04d')),
         h('dt', {}, 'spend'), h('dd', {}, '0.1944 USDC of gas over 107 mainnet transactions; 107 receipts committed under proof/receipts/'),
-        h('dt', {}, 'tests'), h('dd', {}, '42 Foundry (34 unit · 2 fuzz × 512 · 6 invariants × 64 × 32) · 36 vitest incl. 4 fast-check properties × 5,000 = 20,000 generated cases on the refund arithmetic and the log reducer · Playwright end-to-end incl. live mainnet reads'),
+        h('dt', {}, 'tests'), h('dd', {}, '42 Foundry (34 unit · 2 fuzz × 512 · 6 invariants × 64 × 32) · 36 vitest incl. 4 fast-check properties × 5,000 = 20,000 generated cases on the refund arithmetic and the log reducer · Playwright end-to-end on desktop + mobile incl. live mainnet reads'),
       ),
 
       h('h3', {}, 'Reproduce'),

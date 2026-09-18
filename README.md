@@ -236,8 +236,8 @@ shares, not an Arc feature; the recheck's price equality is the guard that would
 ### For reviewers — the 60-second path, no clone
 **Run the seeded order** (any wallet holding a few cents of USDC on Arc): open
 [`edycutjong.github.io/legwork-arc/#/o/1`](https://edycutjong.github.io/legwork-arc/#/o/1), press **Execute — anyone can**,
-read the receipt. The payee gets 0.02 USDC; you get the metered gas back plus a 0.01 USDC tip. Two runs are left, first come — and since the order has been due since
-2026-09-18, the missed periods are owed, so one reviewer can take both back-to-back. No wallet? Open the
+read the receipt. The payee gets 0.02 USDC; you get the metered gas back plus a 0.01 USDC tip. Two runs were left at the time of writing, first come — and since the order has been due since
+2026-09-18, the missed periods are owed, so one reviewer can take both back-to-back (the card says how many are left right now). No wallet? Open the
 [committed hero receipt](https://edycutjong.github.io/legwork-arc/#/o/5/tx/0x2f6a352d11823a37ad085151067856131833ef978445fbed5941e7d17b5b0c95) — read from the chain, no signing.
 
 **Build your own in 60:** *New order* → payee, amount, interval, tip → **Create** (the deposit for one run is quoted from the latest
@@ -279,7 +279,7 @@ npm run security-scan   # npm audit + license check + gitleaks over the full his
 npm run bench -- --n 5  # ≈ a cent of real gas: creates, runs 5×, cancels its own order (needs a keystore)
 ```
 
-**6-stage pipeline** (`.github/workflows/ci.yml`): Quality (web on Node 22/24 + Foundry) → Security (gitleaks over the full history blocks; npm audit and the license check are advisory) → Build + JS budget + readiness gate → E2E → Lighthouse (accessibility is the hard gate) → Deploy gate to `gh-pages`. CodeQL (TypeScript + Python), Dependabot (npm · actions · submodule, grouped, monthly, no majors) and semantic releases from conventional commits run beside it.
+**6-stage pipeline** (`.github/workflows/ci.yml`): Quality (web on Node 22/24 + Foundry; `forge fmt --check` advisory) → Security (gitleaks over the full history blocks; npm audit and the license check are advisory) → Build + JS budget + readiness gate → E2E → Lighthouse (accessibility is the hard gate) → Deploy gate to `gh-pages`. CodeQL (TypeScript + Python), Dependabot (npm · actions · submodule, grouped, monthly, no majors) and semantic releases from conventional commits run beside it.
 
 | Layer | Tool | Status |
 |---|---|---|
