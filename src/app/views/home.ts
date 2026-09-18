@@ -1,9 +1,8 @@
 /** `#/` — New order form (reserve quoted from the latest base fee) + the open-orders list. */
-import { isAddress, parseGwei } from 'viem';
+import { decodeEventLog, isAddress, parseGwei } from 'viem';
 import { neededAt, orderStatus, parseUsdc, reserveAt, runsLeft, usdc18 } from '../../lib/orders';
-import { decodeEventLog } from 'viem';
 import { legworkAbi } from '../../lib/abi';
-import { LIST_PAGE, head, listOrders, nextId, waitReceipt } from '../rpc';
+import { LIST_PAGE, head, listOrders, waitReceipt } from '../rpc';
 import { amount, badge, chip, countdown, errorText, h, notice, spinner } from '../ui';
 import { connect, sendCreate, wallet } from '../wallet';
 
@@ -42,8 +41,9 @@ export async function renderHome(root: HTMLElement) {
   );
   formCard.append(form);
 
-  let basefee = 20_000_000_000n;
-  try { basefee = (await head()).basefee; } catch { /* quote at the documented minimum */ }
+  let hd = { basefee: 20_000_000_000n };
+  try { hd = await head(); } catch { /* quote at the documented minimum */ }
+  const basefee = hd.basefee;
 
   const requote = () => {
     try {
@@ -95,7 +95,7 @@ export async function renderHome(root: HTMLElement) {
   const wrap = h('div', { class: 'table-wrap orders' }, h('p', {}, spinner(), ' reading orders…'));
   listCard.append(wrap);
   try {
-    const [orders, hd, total] = await Promise.all([listOrders(), head(), nextId()]);
+    const { total, rows: orders } = await listOrders();
     const now = BigInt(Math.floor(Date.now() / 1000));
     const tbody = h('tbody');
     for (const { id, order } of orders) {

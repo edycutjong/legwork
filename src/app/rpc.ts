@@ -26,17 +26,9 @@ export async function getOrder(id: bigint): Promise<Order> {
   return decodeOrder(t as any);
 }
 
-export async function getStatus(id: bigint): Promise<number> {
-  return client.readContract({ address: CONTRACT, abi: legworkAbi, functionName: 'status', args: [id] });
-}
-
-export async function getNeeded(id: bigint): Promise<bigint> {
-  return client.readContract({ address: CONTRACT, abi: legworkAbi, functionName: 'needed', args: [id] });
-}
-
-export async function getPriceCap(id: bigint): Promise<bigint> {
-  return client.readContract({ address: CONTRACT, abi: legworkAbi, functionName: 'priceCap', args: [id] });
-}
+// The contract's status/needed/priceCap views are deliberately not read here: a bare eth_call is simulated at base fee 0
+// on Arc's RPC, so they would report a reserve and cap of 0. The page computes the same arithmetic from the latest block's
+// baseFeePerGas (src/lib/orders.ts), which is what the tests cover.
 
 /** The calibrated constant, read from the contract itself (the deploy record is only the fallback). */
 export async function overheadOnChain(): Promise<number> {
@@ -50,11 +42,11 @@ export async function nextId(): Promise<bigint> {
 export const LIST_PAGE = 200;
 
 /** The newest `LIST_PAGE` orders through Multicall3 (one round-trip); sequential eth_call if the multicall fails. */
-export async function listOrders(): Promise<{ id: bigint; order: Order }[]> {
+export async function listOrders(): Promise<{ total: bigint; rows: { id: bigint; order: Order }[] }> {
   const n = await nextId();
   const first = n > BigInt(LIST_PAGE) ? n - BigInt(LIST_PAGE) + 1n : 1n;
   const ids = Array.from({ length: Number(n - first + 1n) }, (_, i) => first + BigInt(i));
-  if (n === 0n) return [];
+  if (n === 0n) return { total: 0n, rows: [] };
   let tuples: any[];
   try {
     const res = await client.multicall({
@@ -66,7 +58,7 @@ export async function listOrders(): Promise<{ id: bigint; order: Order }[]> {
     tuples = [];
     for (const id of ids) tuples.push(await client.readContract({ address: CONTRACT, abi: legworkAbi, functionName: 'orders', args: [id] }));
   }
-  return ids.map((id, i) => ({ id, order: decodeOrder(tuples[i]) })).filter((x) => isOpen(x.order));
+  return { total: n, rows: ids.map((id, i) => ({ id, order: decodeOrder(tuples[i]) })).filter((x) => isOpen(x.order)) };
 }
 
 const executedEvent = parseAbiItem('event Executed(uint256 indexed id, address indexed executor, uint256 gasMetered, uint256 price, uint256 refund, uint256 tip, uint48 nextDue, bool paid)');
@@ -104,9 +96,9 @@ async function orderLogs(id: bigint, fromBlock: bigint, toBlock: bigint): Promis
   return out;
 }
 
-/** Bounded backward history for one order: `maxChunks` × ≤ 9,000 blocks, never past createdBlock. */
+/** Bounded two-ended history for one order: `maxChunks` × ≤ 9,000 blocks from the head and from createdBlock, 250 ms apart. */
 export async function scanHistory(id: bigint, state: ScanState, maxChunks = CHUNKS_ON_OPEN) {
-  return scanBounded<OrderEvent>(state, (w) => orderLogs(id, w.fromBlock, w.toBlock), maxChunks);
+  return scanBounded<OrderEvent>(state, (w) => orderLogs(id, w.fromBlock, w.toBlock), maxChunks, undefined, 250);
 }
 
 export const startScan = (headNumber: bigint, createdBlock: bigint) => initialScan(headNumber, createdBlock);

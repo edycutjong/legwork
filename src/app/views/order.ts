@@ -2,7 +2,7 @@
 import { explorerAddress, explorerTx } from '../../lib/chain';
 import { foldEvents, neededAt, orderStatus, priceCapAt, runsLeft, usdc18, type Order, type OrderEvent, type Run } from '../../lib/orders';
 import { decodeReceipt, type Decoded } from '../../lib/receipt';
-import type { ScanState } from '../../lib/scan';
+import { coverage, type ScanState } from '../../lib/scan';
 import { CONTRACT, estimateExecute, getOrder, head, receipt as getReceipt, scanHistory, startScan, waitReceipt } from '../rpc';
 import { addrLink, amount, badge, chip, countdown, errorText, fmtGwei, h, notice, short, spinner, txLink } from '../ui';
 import { connect, maxFeeThePageWillSend, onWallet, sendCancel, sendExecute, sendResume, sendTopUp, wallet } from '../wallet';
@@ -120,7 +120,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
     drawCard();
   };
 
-  drawCard();
+  // onWallet calls its listener once immediately, so this is also the first draw
   timer = window.setInterval(() => {
     // only the countdown text changes each second; the whole card is redrawn on status flips
     const now = BigInt(Math.floor(Date.now() / 1000));
@@ -191,10 +191,10 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
     try { showReceipt(decodeReceipt(await getReceipt(opts.tx), CONTRACT, order.payee), order); } catch (e) { receiptSlot.replaceChildren(notice('error', errorText(e))); }
   }
 
-  // ---------------------------------------------------------------- runs (bounded backward scan)
+  // ---------------------------------------------------------------- runs (bounded two-ended scan)
   const runsCard = h('div', { class: 'card runs' }, h('h2', {}, 'Recent runs'));
-  const runsBody = h('div', {}, h('p', {}, spinner(), ' scanning the last 8 × 9,000 blocks…'));
-  const older = h('button', { class: 'btn quiet', type: 'button' }, 'Older runs');
+  const runsBody = h('div', {}, h('p', {}, spinner(), ' scanning 8 × 9,000 blocks — the newest and the oldest…'));
+  const older = h('button', { class: 'btn quiet', type: 'button' }, 'Runs in between');
   const scanNote = h('p', { class: 'muted', style: 'font-size:13px' });
   runsCard.append(runsBody, h('div', { class: 'actions' }, older), scanNote);
   right.append(runsCard);
@@ -224,9 +224,10 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
       scan = res.state;
       events.push(...res.logs);
       drawRuns(foldEvents(events));
-      scanNote.textContent = scan.exhausted
-        ? `Scanned back to the order's creation block ${order.createdBlock}. Nothing older can exist.`
-        : `Scanned blocks ${scan.nextTo + 1n} → ${hd.number} in ≤ 9,000-block windows. Older runs are fetched only on request, never past block ${order.createdBlock}.`;
+      const cov = coverage(scan);
+      scanNote.textContent = cov.all
+        ? `Scanned every block from the order's creation (${order.createdBlock}) to ${scan.head}. Nothing is missing.`
+        : `Scanned the newest blocks ${cov.newest?.fromBlock} → ${cov.newest?.toBlock} and the oldest ${cov.oldest?.fromBlock} → ${cov.oldest?.toBlock} in ≤ 9,000-block windows, one request at a time. Runs in between are fetched only on request.`;
       older.disabled = scan.exhausted;
     } catch (e) {
       runsBody.replaceChildren(notice('error', 'History scan failed: ', errorText(e)));

@@ -19,7 +19,7 @@ dollar, so the refund is arithmetic.
 ![USDC is the gas](https://img.shields.io/badge/gas-native_USDC-A4471A?style=flat)
 ![Solidity 0.8.30](https://img.shields.io/badge/Solidity-0.8.30_osaka-363636?style=flat)
 ![Foundry](https://img.shields.io/badge/Foundry-42_tests-1E6F48?style=flat)
-![vitest](https://img.shields.io/badge/vitest-32_tests-1E6F48?style=flat)
+![vitest](https://img.shields.io/badge/vitest-34_tests-1E6F48?style=flat)
 ![viem](https://img.shields.io/badge/viem-2.x-1C1A16?style=flat)
 ![bench](https://img.shields.io/badge/bench-30%2F30_drift_0-1E6F48?style=flat)
 ![license](https://img.shields.io/badge/license-MIT-blue?style=flat)
@@ -56,7 +56,7 @@ offers to add Arc (chain 5042) if it is missing. Prerequisite: USDC on Arc — b
 | Contract | [`0x8E2F8AFC29e9dc127103CD6AD5BCfBe661141ccb`](https://explorer.arc.io/address/0x8E2F8AFC29e9dc127103CD6AD5BCfBe661141ccb) on Arc mainnet (5042) · `OVERHEAD = 32503` gas, calibrated on-chain (three runs, drift 1,103 on all three, spread 0); v2 of the contract — v1 and the calibration deploy are kept in the record (§8) |
 | Bench | **30 real executes**, one order, 1-second periods: `gasUsed` p50 **58,415** · p95 **58,415** · **drift 0 on every row** (gate ≤ 50) · **refund ÷ real fee = 1.000000** on every row (pre-stated: 1.00 ± 0.02) · executor net after tip = exactly the tip · 25 rows by the payer wallet, 5 by **the payee collecting its own payment** |
 | Cost of a run | 58,415 gas ≈ **0.00117 USDC** at Arc's 20 Gwei base fee; a refused payment costs 60,565; a `NotDue` revert 24,323 |
-| Tests | **42 Foundry** cases (34 unit · 2 fuzz suites × 512 runs · 6 invariants × 64 runs) · **32 vitest** cases; the receipt decoder's fixtures are committed mainnet receipts |
+| Tests | **42 Foundry** cases (34 unit · 2 fuzz suites × 512 runs · 6 invariants × 64 runs) · **34 vitest** cases; the receipt decoder's fixtures are committed mainnet receipts |
 | Recheck | `npm run recheck` recomputes all 75 committed execute receipts (36 on v2, 36 on the retired v1, 3 calibration) from raw data (six equalities per row, incl. `price == min(effectiveGasPrice, 2·basefee, maxGasPrice)`) — `all checks passed` |
 | Proof | [`DEMO.md`](./DEMO.md): one mainnet transaction per edge case, the bench table, the calibration table, reproduce commands; 107 receipts under [`proof/receipts/`](./proof/receipts/) |
 
@@ -142,8 +142,8 @@ shares, not an Arc feature; the recheck's price equality is the guard that would
   collecting its own payment. Nobody else runs orders yet.
 - All bench rows sit at a 20 Gwei base fee — the only base fee Arc showed that day — so the `2 × basefee` cap is exercised by
   tests and the `capped` receipt, not by the bench.
-- The page has one external data dependency, the public Arc RPC (anonymous, CORS-enabled today; documented as "permissioned"), plus
-  Google Fonts for its typeface (with a system fallback stack); the contract has none. Explorer source verification was not attempted (its API is behind a challenge page); the runtime-bytecode
+- The page has exactly one external dependency, the public Arc RPC (anonymous, CORS-enabled today; documented as "permissioned") —
+  no fonts, no analytics, no CDN; the contract has none. Explorer source verification was not attempted (its API is behind a challenge page); the runtime-bytecode
   identity check in `scripts/preflight.py --bytecode` is the substitute.
 - The contract's `status` / `needed` / `priceCap` views read `block.basefee`. An `eth_call` sent without a gas price is simulated at
   base fee 0 on Arc's RPC (geth behaviour), so from `cast call` they report a reserve of 0 and a cap of 0 unless `--gas-price` is
@@ -179,8 +179,8 @@ modifier is where the two would meet.
 ```
 contracts/Legwork.sol         the contract (212 lines) · contracts/Rejector.sol  the refusing demo payee
 test/Legwork.t.sol            34 unit + 2 fuzz · test/Legwork.invariants.t.sol  6 invariants with a handler
-test/ts/                      32 vitest cases over the committed receipts
-src/lib/                      order arithmetic · receipt decoding · bounded scan (pure, tested)
+test/ts/                      34 vitest cases over the committed receipts
+src/lib/                      order arithmetic · receipt decoding · two-ended bounded scan (pure, tested)
 src/app/                      the page: rpc reads · wallet writes · two views
 scripts/orders.ts             seed + first runs (+ --not-due) · scripts/meter-bench.ts  the bench · scripts/recheck-receipts.ts  the verdict
 scripts/preflight.py          readiness gate (+ --bytecode identity)

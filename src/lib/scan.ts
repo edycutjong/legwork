@@ -1,7 +1,11 @@
 /**
- * Bounded backward log scan. Arc's public RPC rejects `eth_getLogs` spans above 10,000 blocks (-32012) and
- * rate-limits bursts (-32005), so history is read in ≤ CHUNK-block windows, newest first, one request at a
- * time, and only as far as the reader asks — never past the order's own creation block.
+ * Bounded two-ended log scan. Arc's public RPC rejects `eth_getLogs` spans above 10,000 blocks (-32012) and
+ * rate-limits bursts (-32005 / HTTP 429), so history is read in ≤ CHUNK-block windows, one request at a time,
+ * and only as far as the reader asks. The windows come from BOTH ends of the order's life: the newest blocks
+ * (a run the reader just made) and the oldest, from the order's creation block (its first runs). At ~2 blocks/s
+ * a one-ended backward scan would need dozens of requests to reach a run made yesterday; the two-ended one shows
+ * a seeded order's first runs and a reviewer's latest run with the same eight windows. Nothing is ever read
+ * before `createdBlock` or twice.
  */
 
 export const CHUNK = 9_000n;
@@ -22,37 +26,60 @@ export function windowsBackward(head: bigint, floor: bigint, chunk = CHUNK): Win
   return out;
 }
 
-export type ScanState = { nextTo: bigint; floor: bigint; exhausted: boolean };
+/**
+ * `hi` is the next block to read on the newest side (walking down), `lo` the next on the oldest side (walking up);
+ * the blocks strictly between them are unread. `head` and `floor` are kept so the page can say what was covered.
+ */
+export type ScanState = { head: bigint; floor: bigint; hi: bigint; lo: bigint; exhausted: boolean };
 
 /**
- * Scan up to `maxChunks` windows backward from `state.nextTo`, calling `fetch` for each, sequentially.
- * Returns the logs found and the state to continue from ("older runs").
+ * Read up to `maxChunks` windows, alternating newest-side / oldest-side, calling `fetch` for each, sequentially,
+ * with a short pause between requests so a burst never trips the RPC's rate limit. Returns the logs found and the
+ * state to continue from ("older runs").
  */
 export async function scanBounded<T>(
   state: ScanState,
   fetch: (w: Window) => Promise<T[]>,
   maxChunks = CHUNKS_ON_OPEN,
   chunk = CHUNK,
+  pauseMs = 0,
 ): Promise<{ logs: T[]; state: ScanState }> {
   const logs: T[] = [];
-  let { nextTo, floor } = state;
-  let exhausted = state.exhausted;
+  let { hi, lo, exhausted } = state;
   let n = 0;
   while (!exhausted && n < maxChunks) {
-    const from = nextTo - chunk + 1n > floor ? nextTo - chunk + 1n : floor;
-    logs.push(...(await fetch({ fromBlock: from, toBlock: nextTo })));
-    n++;
-    if (from === floor) {
-      exhausted = true;
+    if (n > 0 && pauseMs > 0) await new Promise((r) => setTimeout(r, pauseMs));
+    let w: Window;
+    if (n % 2 === 0) {
+      const from = hi - chunk + 1n > lo ? hi - chunk + 1n : lo;
+      w = { fromBlock: from, toBlock: hi };
+      hi = from - 1n;
     } else {
-      nextTo = from - 1n;
+      const to = lo + chunk - 1n < hi ? lo + chunk - 1n : hi;
+      w = { fromBlock: lo, toBlock: to };
+      lo = to + 1n;
     }
+    logs.push(...(await fetch(w)));
+    n++;
+    if (lo > hi) exhausted = true;
   }
-  return { logs, state: { nextTo, floor, exhausted } };
+  return { logs, state: { ...state, hi, lo, exhausted } };
 }
 
 export const initialScan = (head: bigint, createdBlock: bigint): ScanState => ({
-  nextTo: head,
+  head,
   floor: createdBlock,
+  hi: head,
+  lo: createdBlock,
   exhausted: head < createdBlock,
 });
+
+/** Human-readable coverage: the two read ranges, or "everything". */
+export function coverage(s: ScanState): { newest?: Window; oldest?: Window; all: boolean } {
+  if (s.exhausted) return { all: true };
+  return {
+    newest: s.hi < s.head ? { fromBlock: s.hi + 1n, toBlock: s.head } : undefined,
+    oldest: s.lo > s.floor ? { fromBlock: s.floor, toBlock: s.lo - 1n } : undefined,
+    all: false,
+  };
+}

@@ -74,7 +74,7 @@ and −6 on the paused branch (the taken jump and the `paid = false` word) — o
 | I6 | One period per execute; same-second second call reverts `NotDue` | `invariant_I6_onePeriodPerExecute`, `test_execute_sameTimestamp…`, `test_execute_missedPeriods…`; mainnet `NotDue` receipt |
 | I7 | The clamp never binds for a benign payee; deposit never underflows | `invariant_I7_clampNeverBindsForBenignPayee`, fuzz; `recheck` (4) |
 
-42 Foundry cases (34 unit, 2 fuzz × 512 runs, 6 invariants × 64 runs × depth 32) · 32 vitest cases (the receipt decoder's fixtures are committed mainnet receipts).
+42 Foundry cases (34 unit, 2 fuzz × 512 runs, 6 invariants × 64 runs × depth 32) · 34 vitest cases (the receipt decoder's fixtures are committed mainnet receipts).
 
 ## Residual risk — adversary → bound → check
 
@@ -104,12 +104,12 @@ rpc.mainnet.arc.io ◀── src/app/rpc.ts ── eth_call orders/OVERHEAD · M
                        │                 (status / needed / priceCap are computed locally from baseFeePerGas — the contract's
                        │                  views read block.basefee, which an eth_call without a gas price sees as 0)
                        │                 eth_getBlockByNumber (baseFeePerGas) · eth_gasPrice
-                       │                 eth_getLogs (≤ 9,000-block windows, backward, 8 on open, on demand, ≥ createdBlock)
+                       │                 eth_getLogs (≤ 9,000-block windows from BOTH ends — the head and createdBlock — 8 on open, more on demand)
                        │                 eth_getTransactionReceipt (one poll: finality is at inclusion)
                        ▼
 src/lib/orders.ts   pure arithmetic: needed / priceCap / refundOf / status / runsLeft / foldEvents / usdc18
 src/lib/receipt.ts  receipt → five lines (payee · refund · tip · real fee · net), drift, both EIP-7708 legs
-src/lib/scan.ts     the bounded backward scanner (no RPC inside; tested with a stub)
+src/lib/scan.ts     the bounded two-ended scanner (no RPC inside; tested with a stub)
 src/app/views/home.ts   #/        new-order form (reserve quoted from the latest base fee) + open orders
 src/app/views/order.ts  #/o/<id>  sheet · countdown · Execute (anyone) · receipt · runs · payer controls
 ```

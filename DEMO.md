@@ -41,7 +41,7 @@ The `live` order was funded for three runs; one was used above, so two are left 
 git clone https://github.com/edycutjong/legwork-arc && cd legwork-arc
 git submodule update --init          # forge-std
 forge test                            # 42 Foundry cases: unit + 2 fuzz suites + 6 invariants (≈ 1 s)
-npm install && npm test               # 32 vitest cases; the receipt decoder's fixtures are committed mainnet receipts (≈ 1 s)
+npm install && npm test               # 34 vitest cases; the receipt decoder's fixtures are committed mainnet receipts (≈ 1 s)
 npm run recheck                       # recompute every committed execute receipt from raw data; exit code is the verdict (read-only, ≈ 40 s)
 python3 scripts/preflight.py --bytecode   # readiness gate + on-chain runtime code == forge build with the immutable filled
 npm run bench -- --n 5                # ≈ a cent of real gas: creates, runs 5×, cancels its own order; needs a funded keystore (see .env.example)
