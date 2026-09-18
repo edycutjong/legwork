@@ -109,7 +109,7 @@ tracked = sh(['git', 'ls-files']).stdout.split()
 PRIVATE = re.compile(r'(^|/)(specs|_specs|_ideas|assets/ui)/|probes\.md|scores\.md|qa-log|predictions|CLAUDE\.md|AGENTS\.md|\.claude/|build-log', re.I)
 KEYISH = re.compile(r'PRIVATE_KEY\s*=\s*0x[0-9a-fA-F]{64}|mnemonic|seed phrase|"ciphertext"|BEGIN (RSA|EC|OPENSSH) PRIVATE', re.I)
 for f in tracked:
-    if f.startswith('lib/'):
+    if f.startswith('lib/') or f == 'scripts/preflight.py':  # the patterns themselves live here
         continue
     if PRIVATE.search(f):
         fail(f'private path tracked: {f}')
