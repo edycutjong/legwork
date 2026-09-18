@@ -1,0 +1,15 @@
+{
+  "transactionHash": "0x703f54c8d7b65de8d8031f60a5a917e52e77551acf1d2ba701c0e3c78264c9f6",
+  "blockHash": "0x7274dd0fa19fe69786871d9a48ee1adfbb095b8a6ebaf6dfecc8a6cef3b131f8",
+  "blockNumber": "0x147e9e6",
+  "transactionIndex": "0x12",
+  "from": "0xa8965a47c9b6ed34f47b374f36cf6c752d24852a",
+  "to": "0x68a92af2be2e6a640a19508a0fe44cbc8b2c62e2",
+  "contractAddress": null,
+  "status": "0x0",
+  "gasUsed": "0x5f03",
+  "cumulativeGasUsed": "0x16ca2c",
+  "effectiveGasPrice": "0x4a817c800",
+  "type": "eip1559",
+  "logs": []
+}

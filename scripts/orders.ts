@@ -2,8 +2,10 @@
  * Seed the demo orders on the production contract (idempotent: an order whose key already has an id in
  * deploy/arc-mainnet.json is skipped) and run each once. Prints the Markdown rows DEMO.md uses.
  *
- *   npm run orders            # create live / rejecting / capped if missing, execute each once
- *   npm run orders -- --dry   # print what would be sent
+ *   npm run orders               # create live / rejecting / capped if missing, execute each once
+ *   npm run orders -- --dry      # print what would be sent
+ *   npm run orders -- --not-due  # a 1-hour order: run it once, then send a second execute with a fixed gas limit so the
+ *                                # NotDue revert lands as a real status-0 receipt; cancel; record under orders.notDue
  */
 import { decodeEventLog, parseGwei } from 'viem';
 import { legworkAbi } from '../src/lib/abi';
@@ -13,6 +15,7 @@ import { assertArc, balanceGuard, fees, loadDeploy, publicClient, saveDeploy, sa
 import { explorerTx } from '../src/lib/chain';
 
 const dry = process.argv.includes('--dry');
+const notDueOnly = process.argv.includes('--not-due');
 
 type Seed = {
   key: string;
@@ -27,8 +30,50 @@ type Seed = {
   proves: string;
 };
 
+async function notDue() {
+  const d = loadDeploy();
+  const contract = d.contract.address as `0x${string}`;
+  const { account, wallet } = signer();
+  await balanceGuard(account.address);
+  const amount = 1_000_000_000_000_000n, tip = 100_000_000_000_000n, maxGasPrice = parseGwei('100');
+  const deposit = 2n * (amount + tip + 120_000n * 20_000_000_000n); // two honest runs' worth
+  const createHash = await wallet.writeContract({ address: contract, abi: legworkAbi, functionName: 'create', args: [d.payeeDemo, amount, 3600, tip, Number(maxGasPrice)], value: deposit, ...(await fees()) });
+  const cr = await publicClient.waitForTransactionReceipt({ hash: createHash });
+  saveReceipt(cr);
+  const created = cr.logs.map((l) => { try { return decodeEventLog({ abi: legworkAbi, data: l.data, topics: l.topics }); } catch { return null; } }).find((e) => e?.eventName === 'Created') as any;
+  const id = created.args.id as bigint;
+  console.log(`order #${id} (1 h interval) created ${createHash}`);
+  const runHash = await wallet.writeContract({ address: contract, abi: legworkAbi, functionName: 'execute', args: [BigInt(id)], ...(await fees()) });
+  const rr = await publicClient.waitForTransactionReceipt({ hash: runHash });
+  saveReceipt(rr);
+  const x = decodeReceipt(rr, contract, d.payeeDemo);
+  console.log(`run 1: ${runHash} gasUsed ${x.gasUsed} metered ${x.executed?.gasMetered} drift ${x.drift}`);
+  // eth_call first: the revert reason a simulating executor sees
+  let reason = '';
+  try {
+    await publicClient.simulateContract({ address: contract, abi: legworkAbi, functionName: 'execute', args: [BigInt(id)], account: account.address });
+  } catch (e: any) {
+    const rev = e?.cause?.data ?? e?.data;
+    reason = rev?.errorName ? `${rev.errorName}(${(rev.args ?? []).join(', ')})` : (e?.shortMessage ?? e?.message ?? String(e));
+  }
+  console.log(`eth_call now: ${reason}`);
+  // then the forced transaction: fixed gas limit, no estimation, lands as status 0
+  const failHash = await wallet.writeContract({ address: contract, abi: legworkAbi, functionName: 'execute', args: [BigInt(id)], gas: 80_000n, ...(await fees()) });
+  const fr = await publicClient.waitForTransactionReceipt({ hash: failHash });
+  saveReceipt(fr);
+  console.log(`forced execute: ${failHash} status ${fr.status} gasUsed ${fr.gasUsed} fee ${usdc18(fr.gasUsed * fr.effectiveGasPrice)} USDC`);
+  const cancelHash = await wallet.writeContract({ address: contract, abi: legworkAbi, functionName: 'cancel', args: [BigInt(id)], ...(await fees()) });
+  const cxr = await publicClient.waitForTransactionReceipt({ hash: cancelHash });
+  saveReceipt(cxr);
+  console.log(`cancelled ${cancelHash}`);
+  d.orders ??= {};
+  d.orders.notDue = { id: Number(id), create: createHash, createBlock: Number(cr.blockNumber), firstRun: runHash, firstRunBlock: Number(rr.blockNumber), revert: failHash, revertBlock: Number(fr.blockNumber), revertStatus: fr.status, revertGasUsed: Number(fr.gasUsed), ethCallReason: reason, cancel: cancelHash, cancelBlock: Number(cxr.blockNumber), params: { payee: d.payeeDemo, amount: amount.toString(), interval: 3600, tip: tip.toString(), maxGasPrice: maxGasPrice.toString(), deposit: deposit.toString() } };
+  saveDeploy(d);
+}
+
 async function main() {
   await assertArc();
+  if (notDueOnly) return notDue();
   const d = loadDeploy();
   const contract = d.contract.address as `0x${string}`;
   const seeds: Seed[] = [

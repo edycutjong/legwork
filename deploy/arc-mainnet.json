@@ -115,6 +115,47 @@
         "deposit": "8800000000000000"
       },
       "note": "created, executed and cancelled through the page's own code path (form -> Execute button -> Cancel) with an injected provider forwarding eth_sendTransaction to cast; the hero flow timed at ~40 s create->receipt"
+    },
+    "bench": {
+      "id": 5,
+      "create": "0x2fa0ae0af39d0470cecea9cc6e156e9ae2bdb172cb220d2fef8cdf5cb4c0a160",
+      "createBlock": 21489885,
+      "runs": 30,
+      "firstRun": "0x3734f3b7b80c0fe92c422b8f64711c9fea16fa6eb37c1a289f72d68aa32b04a6",
+      "lastRun": "0xd1d528853e0776f6a1f034f0119675825888f273023bcc3b598b4f4e3b9344fb",
+      "cancel": "0x32615c3ceeeaf5b59380e7dae646f40fc3f5a9bf497d97b02f690f75b9d0b57f",
+      "cancelBlock": 21490011,
+      "params": {
+        "payee": "0x352e5cDea885DBCAbe850259CA8AA6759b5aAA60",
+        "amount": "1000000000000000",
+        "interval": 1,
+        "tip": "100000000000000",
+        "maxGasPrice": "100000000000",
+        "deposit": "108500000000000000"
+      },
+      "extraRun": "0x861625470e447205ef4429bc9374124a76f44272c5674ad8cf05d29482c7bdb4"
+    },
+    "notDue": {
+      "id": 6,
+      "create": "0xabda768ea83183f795e47616ab78727875236a541a28edee8b95dd6fced09afb",
+      "createBlock": 21490138,
+      "firstRun": "0x7793ef458e2705c12a853a3b2ed9dcb26dfc0cd15ea190cdf7f67bb0f7ac51aa",
+      "firstRunBlock": 21490147,
+      "revert": "0x703f54c8d7b65de8d8031f60a5a917e52e77551acf1d2ba701c0e3c78264c9f6",
+      "revertBlock": 21490150,
+      "revertStatus": "reverted",
+      "revertGasUsed": 24323,
+      "ethCallReason": "NotDue(1789733066) \u2014 eth_call execute(6) at block 21490149 (the block before the forced tx) reverts with data 0x12d2fbb9\u20266aad2cca = NotDue(uint48 nextDue), nextDue = 1789733066 (2026-09-18 12:04:26 UTC, one hour after run 1)",
+      "cancel": "0x19a81aa3185f0b6d1819b4602ee4e97b5b7bdc29a2164300eade5e97798b7f47",
+      "cancelBlock": 21490153,
+      "params": {
+        "payee": "0x352e5cDea885DBCAbe850259CA8AA6759b5aAA60",
+        "amount": "1000000000000000",
+        "interval": 3600,
+        "tip": "100000000000000",
+        "maxGasPrice": "100000000000",
+        "deposit": "7000000000000000"
+      }
     }
   }
 }

@@ -1,5 +1,5 @@
 /** These fixtures are real Arc mainnet receipts committed under proof/ — nothing here is synthetic. */
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { decodeReceipt, fromJsonReceipt } from '../../src/lib/receipt';
 import { refundOf } from '../../src/lib/orders';
@@ -8,6 +8,8 @@ const CONTRACT = '0x68a92aF2Be2e6A640a19508a0fe44cbc8B2C62E2';
 const PAYEE = '0x352e5cDea885DBCAbe850259CA8AA6759b5aAA60';
 const REJECTOR = '0x1c17C16177f2aC609440ea20c00D0e108F617c47';
 const load = (h: string) => fromJsonReceipt(JSON.parse(readFileSync(`proof/receipts/${h}.json`, 'utf8')));
+/** full hash of a committed receipt from its prefix */
+const load_hash = (prefix: string) => readdirSync('proof/receipts').find((f) => f.startsWith(prefix))!.replace('.json', '').slice(prefix.length);
 
 describe('decodeReceipt on the live order run (0x651700ee…)', () => {
   const x = decodeReceipt(load('0x651700ee3f058685b0cdb896a707f5e5e7e8c507076a3f0f4d6816f3d6e25f0b'), CONTRACT, PAYEE);
@@ -55,6 +57,18 @@ describe('decodeReceipt on the capped order (0x76d50864…)', () => {
     expect(x.executed!.refund < x.realFee).toBe(true);
     expect(x.executorNet! < x.executed!.tip).toBe(true);
     expect(x.drift).toBe(0n);
+  });
+});
+
+describe('decodeReceipt when the payee executes its own payment (bench row 26, 0x2eec34aa…)', () => {
+  const x = decodeReceipt(load('0x2eec34aa86' + '0'.repeat(0) + load_hash('0x2eec34aa86')), CONTRACT, PAYEE);
+  it('tells the two legs to the same address apart by value', () => {
+    expect(x.executor.toLowerCase()).toBe(PAYEE.toLowerCase());
+    expect(x.legs).toHaveLength(2);
+    expect(x.executorLeg?.value).toBe(x.executed!.refund + x.executed!.tip);
+    expect(x.payeeLeg?.value).toBe(1_000_000_000_000_000n);
+    expect(x.drift).toBe(0n);
+    expect(x.gasUsed).toBe(55_530n);
   });
 });
 

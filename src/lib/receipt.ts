@@ -68,9 +68,14 @@ export function decodeReceipt(
     out.drift = out.gasUsed - out.executed.gasMetered;
     out.executorNet = out.executed.refund + out.executed.tip - out.realFee;
     out.ratio = out.realFee === 0n ? 0 : Number((out.executed.refund * 1_000_000n) / out.realFee) / 1_000_000;
-    out.executorLeg = out.legs.find((x) => x.to.toLowerCase() === out.executed!.executor.toLowerCase());
-    if (payee) out.payeeLeg = out.legs.find((x) => x.to.toLowerCase() === payee.toLowerCase());
-    else out.payeeLeg = out.legs.find((x) => x !== out.executorLeg);
+    // the executor's leg is the one worth refund + tip; when the payee executes its own payment both legs go to the
+    // same address and only the value tells them apart
+    const owed = out.executed.refund + out.executed.tip;
+    const toExec = out.legs.filter((x) => x.to.toLowerCase() === out.executed!.executor.toLowerCase());
+    out.executorLeg = toExec.find((x) => x.value === owed) ?? toExec[0];
+    const rest = out.legs.filter((x) => x !== out.executorLeg);
+    if (payee) out.payeeLeg = rest.find((x) => x.to.toLowerCase() === payee.toLowerCase());
+    else out.payeeLeg = rest[0];
   }
   return out;
 }

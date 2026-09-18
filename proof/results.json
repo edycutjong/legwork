@@ -1,0 +1,92 @@
+{
+  "startedAt": "2026-09-18T11:19:21.712Z",
+  "finishedAt": "2026-09-18T11:20:27.061Z",
+  "chainId": 5042,
+  "contract": "0x68a92aF2Be2e6A640a19508a0fe44cbc8B2C62E2",
+  "overhead": 32503,
+  "orderId": 5,
+  "order": {
+    "payee": "0x352e5cDea885DBCAbe850259CA8AA6759b5aAA60",
+    "amount": "1000000000000000",
+    "interval": 1,
+    "tip": "100000000000000",
+    "maxGasPrice": "100000000000",
+    "deposit": "108500000000000000"
+  },
+  "n": 30,
+  "runsByDeployer": 25,
+  "runsByPayee": 5,
+  "blocks": {
+    "first": 21489888,
+    "last": 21490006
+  },
+  "basefeeAtCreate": "20000000000",
+  "gasUsed": {
+    "p50": 58030,
+    "p95": 58030,
+    "min": 55530,
+    "max": 58030
+  },
+  "gasMetered": {
+    "p50": 58030,
+    "p95": 58030
+  },
+  "drift": {
+    "p50": 0,
+    "p95": 0,
+    "min": 0,
+    "max": 0,
+    "absMax": 0,
+    "gate": 50,
+    "pass": true
+  },
+  "ratio": {
+    "p50": 1,
+    "p95": 1,
+    "min": 1,
+    "max": 1,
+    "tolerance": 0.02,
+    "pass": true
+  },
+  "executorNetUsdc": {
+    "p50": 0.0001,
+    "p95": 0.0001,
+    "min": 0.0001,
+    "max": 0.0001,
+    "tipUsdc": 0.0001
+  },
+  "realFeeUsdc": {
+    "p50": 0.0011606,
+    "p95": 0.0011606
+  },
+  "priceEqualsEffectiveGasPriceOnEveryRow": true,
+  "priceCapHeld": true,
+  "allPaid": true,
+  "byExecutor": {
+    "0xa8965a47c9b6ed34f47b374f36cf6c752d24852a": {
+      "n": 25,
+      "gasUsedP50": 58030,
+      "driftMax": 0
+    },
+    "0x352e5cdea885dbcabe850259ca8aa6759b5aaa60": {
+      "n": 5,
+      "gasUsedP50": 55530,
+      "driftMax": 0
+    }
+  },
+  "create": {
+    "hash": "0x2fa0ae0af39d0470cecea9cc6e156e9ae2bdb172cb220d2fef8cdf5cb4c0a160",
+    "gasUsed": 122428
+  },
+  "cancel": {
+    "hash": "0x32615c3ceeeaf5b59380e7dae646f40fc3f5a9bf497d97b02f690f75b9d0b57f",
+    "gasUsed": 40536,
+    "returned": "38671400000000000"
+  },
+  "deployerBalance": {
+    "before": "381758375394413623",
+    "after": "311270495394413623",
+    "deltaUsdc": -0.07048788
+  },
+  "note": "A 31st execute (0x861625470e447205ef4429bc9374124a76f44272c5674ad8cf05d29482c7bdb4, block after row 30) was sent as a NotDue attempt and landed as a normal paid run because a full second had elapsed on this 1-second order; it is a valid receipt (npm run recheck includes it) and is excluded from these 30 rows. The NotDue revert receipt lives under orders.notDue in deploy/arc-mainnet.json."
+}
