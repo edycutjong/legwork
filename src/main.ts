@@ -20,7 +20,7 @@ app.append(
     h('footer', { class: 'foot' },
       h('span', {}, `Arc mainnet · chain 5042 · contract `, h('a', { href: explorerAddress(CONTRACT), target: '_blank', rel: 'noopener' }, CONTRACT)),
       overheadSlot,
-      h('span', {}, 'No backend: every number on this page comes from eth_call, eth_getLogs and the transaction receipt.'),
+      h('span', {}, 'No backend: every number on this page comes from eth_call, eth_getLogs, the latest block base fee, eth_gasPrice and the transaction receipt.'),
     ),
   ),
 );

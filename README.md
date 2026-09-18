@@ -30,10 +30,11 @@ dollar, so the refund is arithmetic.
 
 ## 1 · The receipt
 
-<div align="center"><img src="docs/assets/receipt-order-4.png" alt="The receipt the page shows after Execute: payee received 0.001 USDC; executor refunded +0.001168 USDC (58415 gas metered × 20 Gwei); executor tipped +0.001; real fee paid −0.001168 (receipt.gasUsed 58415 × effectiveGasPrice 20 Gwei); executor net +0.001, drift 0 gas, refund ÷ fee 1.000000" width="530"></div>
+<div align="center"><img src="docs/assets/receipt-order-5.png" alt="The receipt the page shows after Execute: payee received 0.001 USDC; executor refunded +0.001168 USDC (58415 gas metered × 20 Gwei); executor tipped +0.001; real fee paid −0.001168 (receipt.gasUsed 58415 × effectiveGasPrice 20 Gwei); executor net +0.001, drift 0 gas, refund ÷ fee 1.000000" width="530"></div>
 
-That is order #4 on Arc mainnet, created from the page's form and run from its **Execute** button
-([`0xf71fffd0…7154`](https://explorer.arc.io/tx/0xf71fffd0f3dee7e43f9df1ba87bc7f954e97d29d42a59435ead45485b5dd7154)).
+That is order #5 on Arc mainnet, created from the page's form and run from its **Execute** button
+([`0x2f6a352d…0c95`](https://explorer.arc.io/tx/0x2f6a352d11823a37ad085151067856131833ef978445fbed5941e7d17b5b0c95)) — the second of the two
+page-driven orders; the first, #4 ([`0xf71fffd0…7154`](https://explorer.arc.io/tx/0xf71fffd0f3dee7e43f9df1ba87bc7f954e97d29d42a59435ead45485b5dd7154)), read the same to the wei.
 Two of the five lines come from the contract's own event; one comes from the transaction receipt and nowhere else.
 They agree to the wei. `gasUsed` 58,415 on the receipt; `gasMetered` 58,415 in the event; drift 0.
 
@@ -41,7 +42,8 @@ They agree to the wei. `gasUsed` 58,415 on the receipt; `gasMetered` 58,415 in t
 
 **Run the seeded order** (any wallet holding a few cents of USDC on Arc): open
 [`edycutjong.github.io/legwork-arc/#/o/1`](https://edycutjong.github.io/legwork-arc/#/o/1), press **Execute — anyone can**,
-read the receipt. The payee gets 0.02 USDC; you get the metered gas back plus a 0.01 USDC tip. Two runs are left for reviewers.
+read the receipt. The payee gets 0.02 USDC; you get the metered gas back plus a 0.01 USDC tip. Two runs are left, first come — and since the order has been due since
+2026-09-18, the missed periods are owed, so one reviewer can take both back-to-back.
 
 **Build your own:** *New order* → payee, amount, interval, tip → **Create** (the deposit for one run is quoted from the latest
 base fee) → the card opens *Due* → **Execute**. Reading the page needs no wallet at all; signing uses the injected one and
@@ -55,7 +57,7 @@ offers to add Arc (chain 5042) if it is missing. Prerequisite: USDC on Arc — b
 | Bench | **30 real executes**, one order, 1-second periods: `gasUsed` p50 **58,415** · p95 **58,415** · **drift 0 on every row** (gate ≤ 50) · **refund ÷ real fee = 1.000000** on every row (pre-stated: 1.00 ± 0.02) · executor net after tip = exactly the tip · 25 rows by the payer wallet, 5 by **the payee collecting its own payment** |
 | Cost of a run | 58,415 gas ≈ **0.00117 USDC** at Arc's 20 Gwei base fee; a refused payment costs 60,565; a `NotDue` revert 24,323 |
 | Tests | **42 Foundry** cases (34 unit · 2 fuzz suites × 512 runs · 6 invariants × 64 runs) · **32 vitest** cases; the receipt decoder's fixtures are committed mainnet receipts |
-| Recheck | `npm run recheck` recomputes all 75 committed execute receipts (36 on v2, 36 on the retired v1, 3 calibration) from raw data (five equalities per row, incl. `price == min(effectiveGasPrice, 2·basefee, maxGasPrice)`) — `all checks passed` |
+| Recheck | `npm run recheck` recomputes all 75 committed execute receipts (36 on v2, 36 on the retired v1, 3 calibration) from raw data (six equalities per row, incl. `price == min(effectiveGasPrice, 2·basefee, maxGasPrice)`) — `all checks passed` |
 | Proof | [`DEMO.md`](./DEMO.md): one mainnet transaction per edge case, the bench table, the calibration table, reproduce commands; 107 receipts under [`proof/receipts/`](./proof/receipts/) |
 
 ```sh
@@ -140,9 +142,13 @@ shares, not an Arc feature; the recheck's price equality is the guard that would
   collecting its own payment. Nobody else runs orders yet.
 - All bench rows sit at a 20 Gwei base fee — the only base fee Arc showed that day — so the `2 × basefee` cap is exercised by
   tests and the `capped` receipt, not by the bench.
-- The page has one external dependency, the public Arc RPC (anonymous, CORS-enabled today; documented as "permissioned"); the
-  contract has none. Explorer source verification was not attempted (its API is behind a challenge page); the runtime-bytecode
+- The page has one external data dependency, the public Arc RPC (anonymous, CORS-enabled today; documented as "permissioned"), plus
+  Google Fonts for its typeface (with a system fallback stack); the contract has none. Explorer source verification was not attempted (its API is behind a challenge page); the runtime-bytecode
   identity check in `scripts/preflight.py --bytecode` is the substitute.
+- The contract's `status` / `needed` / `priceCap` views read `block.basefee`. An `eth_call` sent without a gas price is simulated at
+  base fee 0 on Arc's RPC (geth behaviour), so from `cast call` they report a reserve of 0 and a cap of 0 unless `--gas-price` is
+  given; `execute` itself always sees the real base fee. The page does not use those views — it computes the same arithmetic from
+  the block's `baseFeePerGas` (`src/lib/orders.ts`), which is what the tests cover.
 - Left out on purpose: a paymaster (the order already repays the executor — sponsoring its gas would pay twice), batched
   execution (one order per transaction is what keeps the metering exact), and a server of any kind.
 

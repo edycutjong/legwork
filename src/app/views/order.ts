@@ -67,10 +67,11 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
     );
     if (st === 'Due') {
       maxFeeThePageWillSend().then(async (mf) => {
-        if (mf > cap) {
+        const eff = mf < hd.basefee ? mf : hd.basefee; // priority 0: the effective price is the base fee, not the max
+        if (eff > cap) {
           let g = 60_000n;
           try { g = await estimateExecute(id, wallet()?.address); } catch { /* keep the estimate */ }
-          runNote.textContent = `The page will send maxFee ${fmtGwei(mf)}, above this order's ${fmtGwei(cap)} cap — you would eat ≈ ${usdc18((mf - cap) * g)} USDC of the fee (tip ${usdc18(order.tip)}).`;
+          runNote.textContent = `At the current base fee ${fmtGwei(hd.basefee)} the fee is priced above this order's ${fmtGwei(cap)} cap — you would eat ≈ ${usdc18((eff - cap) * g)} USDC of the fee (tip ${usdc18(order.tip)}).`;
         } else {
           runNote.textContent = `The page sends priority 0 at max ${fmtGwei(mf)}; your refund is priced at min(that, ${fmtGwei(cap)}). Net ≈ the tip.`;
         }
@@ -129,8 +130,8 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
     if (st === 'Due' && !wasDue) { drawCard(); return; }
     if (cd && st === 'Waiting') cd.textContent = countdown(Number(order.nextDue - now));
   }, 1000);
-  onWallet(() => drawCard());
-  window.addEventListener('hashchange', () => timer && clearInterval(timer), { once: true });
+  const offWallet = onWallet(() => drawCard());
+  window.addEventListener('hashchange', () => { if (timer) clearInterval(timer); offWallet(); }, { once: true });
 
   // ---------------------------------------------------------------- execute → receipt
   async function execute(btn: HTMLButtonElement, out: HTMLElement) {

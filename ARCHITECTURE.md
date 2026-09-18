@@ -57,7 +57,7 @@ BadParams Reentrant PayoutFailed`.
 
 Why the drift is a constant: everything after line 9 is one value call with a fixed stipend, one six-word event, one
 `tstore` and the return; everything before it is inside the window. The only inputs that can move `gasUsed` without
-moving `metered` are calldata bytes (12 gas per non-zero byte of `id`) and a contract executor's own code (its CALL into
+moving `metered` are calldata bytes (16 gas per non-zero byte of `id`, 4 per zero byte) and a contract executor's own code (its CALL into
 `execute`, its `receive`), which it pays for itself; the 21,000 intrinsic, which a transaction pays once however many orders it
 runs, is credited to the first `execute` of the transaction only (`_txSeen`). Measured: drift 0 on 35 of 36 production runs
 and −6 on the paused branch (the taken jump and the `paid = false` word) — on v1 and again on v2.
@@ -90,6 +90,7 @@ and −6 on the paused branch (the taken jump and the `paid = false` word) — o
 | Executor starving a contract payee of gas to force a pause | cannot: the 63/64 rule makes the outer call fail whenever the payee's does | — | `test_execute_gasStarvationCannotPauseAWorkingPayee` |
 | Same-block race between executors, or an execute landing after a cancel | the loser reverts (`NotDue` / `NoOrder`) and pays ≈ 24k gas; simulation does not prevent it | ≈ 0.0005 USDC per lost race | `NotDue` receipt |
 | Payer contract whose `receive` refuses USDC | can never `cancel`; the deposit drains only through executors | self-inflicted | `test_cancel_revertsPayoutFailed…` |
+| Integrator reading `status` / `needed` / `priceCap` through `eth_call` without a gas price | sees `Due`, a reserve of 0 and a cap of 0 (the RPC simulates at base fee 0) | views only; `execute` uses the real base fee and reverts `Underfunded` where the view said `Due` | pass `--gas-price` to `cast call`; the page computes from `baseFeePerGas` instead |
 | Public RPC unavailable or no longer anonymous | the page cannot read; nothing on chain changes | one external dependency, no fallback | `docs/FRICTION-LOG.md` |
 | `tx.gasprice ≠ effectiveGasPrice` on a future client | drift stops being constant | `recheck` equality (3) fails on the first such row | `scripts/recheck-receipts.ts` |
 | Opcode repricing after a client upgrade | constant drift reappears | redeploy with a new constructor argument | calibration procedure in `DEMO.md` |
@@ -99,7 +100,9 @@ and −6 on the paused branch (the taken jump and the `paid = false` word) — o
 ```
 window.ethereum ──(sign only)──▶ src/app/wallet.ts ──▶ create / execute / topUp / resume / cancel
                                                             │
-rpc.mainnet.arc.io ◀── src/app/rpc.ts ── eth_call orders/status/needed/priceCap/OVERHEAD · Multicall3 list (newest 200)
+rpc.mainnet.arc.io ◀── src/app/rpc.ts ── eth_call orders/OVERHEAD · Multicall3 list (newest 200)
+                       │                 (status / needed / priceCap are computed locally from baseFeePerGas — the contract's
+                       │                  views read block.basefee, which an eth_call without a gas price sees as 0)
                        │                 eth_getBlockByNumber (baseFeePerGas) · eth_gasPrice
                        │                 eth_getLogs (≤ 9,000-block windows, backward, 8 on open, on demand, ≥ createdBlock)
                        │                 eth_getTransactionReceipt (one poll: finality is at inclusion)
@@ -121,7 +124,7 @@ Reading needs no wallet. The injected provider is touched only when the user sig
 |---|---|
 | `orders.ts` | seeds `live` / `rejecting` / `capped`, runs each once, prints the DEMO rows; `--not-due` produces the reverted receipt on a 1-hour order |
 | `meter-bench.ts` | N consecutive real executes on one 1-second order (25 by the payer wallet + 5 by the payee), rows → `proof/rows.csv`, p50/p95 → `proof/results.json`, exit 1 if drift > 50 or ratio outside ± 0.02 |
-| `recheck-receipts.ts` | read-only: recompute every committed execute receipt (five equalities), exit code is the verdict |
+| `recheck-receipts.ts` | read-only: recompute every committed execute receipt (six equalities), exit code is the verdict |
 | `preflight.py` | readiness gate: counts, placeholders, private material, live URL, every DEMO hash has a receipt, `--bytecode` identity |
 
 ## What is deliberately not here

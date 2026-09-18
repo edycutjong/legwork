@@ -30,7 +30,7 @@ on the 36 runs of the retired v1) and what happens when things go wrong.
 2. Press **Execute — anyone can**. The page sends `execute(1)` with priority 0 at `max(eth_gasPrice, 20 Gwei)`.
 3. Read the receipt: the payee got 0.02 USDC, you got the metered gas back plus 0.01 USDC, and the real fee from the receipt is printed beside the refund.
 
-The `live` order was funded for three runs; one was used above, so two are left for reviewers (then it reads *Underfunded — top up ≥ 0.026*, which is also a state worth seeing).
+The `live` order was funded for three runs; one was used above, so two are left for reviewers, first come — the order has been due since 2026-09-18 and the missed periods are owed, so one wallet can take both back-to-back (then it reads *Underfunded — top up ≥ 0.026*, which is also a state worth seeing).
 **Prerequisite:** USDC on Arc in your wallet. Getting it there from another chain is Circle's bridge (CCTP), not part of this project.
 
 **Build your own in 60 seconds:** *New order* → payee, amount, interval, tip → **Create** (the reserve is quoted from the latest base fee) → the order card opens Due → **Execute**.
@@ -98,7 +98,7 @@ Methodology: no randomness to seed — the fixed inputs are the order parameters
 Order #4 was created from the form, executed from the button and cancelled from the payer panel by a headless browser whose injected
 provider forwarded `eth_sendTransaction` to a signer — the page's own code path, no script shortcut:
 create [`0xe5f88cca…b279`](https://explorer.arc.io/tx/0xe5f88cca0b5e3684b0f98cc746c4db2d07c7734a27a3e5f360b5ed438d65b279) → execute [`0xf71fffd0…7154`](https://explorer.arc.io/tx/0xf71fffd0f3dee7e43f9df1ba87bc7f954e97d29d42a59435ead45485b5dd7154) (gasUsed 58415, metered 58415, drift 0, ratio 1.000000) → cancel [`0x7f511793…8675`](https://explorer.arc.io/tx/0x7f51179362b3772d6cd36a44e7053fe57e1fc9790dbad380ac81770ab0e88675).
-Create → receipt on screen: **9.7 s** wall clock (4.7 s to the order card). The harness was accidentally run twice; the repeat (order #5:
+Create → receipt on screen: **9.7 s** wall clock (4.7 s to the order card) — timed by the harness and recorded in `deploy/arc-mainnet.json`; the receipts prove the transactions, not the stopwatch. The harness was accidentally run twice; the repeat (order #5:
 [`0x52d964dc…0bc7`](https://explorer.arc.io/tx/0x52d964dc80968c71a55784c8a7535eff63c6755862883dd6002329c13c2b0bc7) → [`0x2f6a352d…0c95`](https://explorer.arc.io/tx/0x2f6a352d11823a37ad085151067856131833ef978445fbed5941e7d17b5b0c95), drift 0 → [`0x86637f32…f75d`](https://explorer.arc.io/tx/0x86637f322dab1cea08ed60cc4ea487204042f7eb5b19bfecc4b968dc6595f75d)) is kept because it happened.
 
 ## Calibration — how `OVERHEAD` was measured
@@ -143,5 +143,5 @@ identity above is the substitute, and anyone can rerun it.
 ## Spend
 
 Gas actually paid to block producers across the whole build — 107 transactions (three deploys, the Rejector, one pre-fund, creates, executes incl. the two reverted ones, cancels):
-**0.1943 USDC** (Σ `gasUsed × effectiveGasPrice` over `proof/receipts/`). Deposits open in the v2 demo orders: 0.1365 USDC (they drain to
+**0.1944 USDC** (Σ `gasUsed × effectiveGasPrice` over `proof/receipts/` = 0.19437713). Deposits open in the v2 demo orders: 0.1365 USDC (they drain to
 whoever executes — that is the point). Amounts and tips that moved between the builder's own wallets are not spend.
