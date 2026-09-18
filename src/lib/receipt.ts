@@ -2,7 +2,7 @@
  * Everything the receipt panel shows is derived here from a transaction receipt and the order's numbers:
  * the two system-emitter Transfer legs, the contract's own metering, the real fee from the receipt, the drift.
  */
-import { decodeEventLog, type Log, type TransactionReceipt } from 'viem';
+import { decodeEventLog, type TransactionReceipt } from 'viem';
 import { legworkAbi, transferAbi } from './abi';
 import { SYSTEM_EMITTER } from './chain';
 
@@ -29,7 +29,7 @@ export type Decoded = {
   executorLeg?: Leg;
 };
 
-type MinimalLog = Pick<Log, 'address' | 'topics' | 'data'> & { logIndex?: number | null };
+type MinimalLog = { address: `0x${string}`; topics: readonly `0x${string}`[]; data: `0x${string}`; logIndex?: number | null };
 
 export function decodeReceipt(
   r: Pick<TransactionReceipt, 'transactionHash' | 'blockNumber' | 'status' | 'gasUsed' | 'effectiveGasPrice' | 'from'> & { logs: MinimalLog[] },
