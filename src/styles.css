@@ -42,7 +42,7 @@ small, .label { font-size: 14px; color: var(--ink-2); }
 .notice.ok { border-left-color: var(--repaid); }
 .notice button { margin-left: 8px; }
 
-.two-col { display: grid; gap: 24px; grid-template-columns: 1fr; }
+.two-col { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); } /* minmax(0): a wide table must scroll inside its card, never widen it */
 @media (min-width: 960px) { .two-col { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 
 .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: 8px; padding: 20px; }
@@ -118,7 +118,8 @@ small, .label { font-size: 14px; color: var(--ink-2); }
 .runs table, .orders table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .runs th, .orders th { text-align: left; font-weight: 500; color: var(--ink-2); padding: 8px; border-bottom: 1px solid var(--rule); background: var(--paper-3); }
 .runs td, .orders td { padding: 8px; border-bottom: 1px dotted var(--rule); font-family: var(--mono); vertical-align: top; }
-.table-wrap { overflow-x: auto; }
+.table-wrap { overflow-x: auto; max-width: 100%; }
+.card { min-width: 0; }
 .orders tr.row-link { cursor: pointer; }
 .orders tr.row-link:hover td { background: var(--paper-3); }
 .muted { color: var(--ink-2); }

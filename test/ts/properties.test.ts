@@ -8,10 +8,21 @@ import fc from 'fast-check';
 import { REFUND_CEIL_GAS, foldEvents, neededAt, priceOf, refundOf, type OrderEvent } from '../../src/lib/orders';
 
 const RUNS = 5_000;
-/** on chain, (transactionHash, logIndex) identifies one log — the generators must not produce two different logs with one key */
-const distinctLogs = <T extends { transactionHash: string; logIndex: number }>(xs: T[]): T[] => {
+/**
+ * On chain a log is identified by (transactionHash, logIndex), logIndex is unique within a block, and a transaction sits in
+ * exactly one block — the generators must not produce data that violates any of the three.
+ */
+const distinctLogs = <T extends { transactionHash: string; logIndex: number; blockNumber: bigint }>(xs: T[]): T[] => {
   const seen = new Set<string>();
-  return xs.filter((x) => { const k = `${x.transactionHash}:${x.logIndex}`; if (seen.has(k)) return false; seen.add(k); return true; });
+  const blockOf = new Map<string, bigint>();
+  return xs.filter((x) => {
+    const b = blockOf.get(x.transactionHash);
+    if (b !== undefined && b !== x.blockNumber) return false;
+    const k1 = `${x.transactionHash}:${x.logIndex}`, k2 = `${x.blockNumber}:${x.logIndex}`;
+    if (seen.has(k1) || seen.has(k2)) return false;
+    seen.add(k1); seen.add(k2); blockOf.set(x.transactionHash, x.blockNumber);
+    return true;
+  });
 };
 const wei = fc.bigInt({ min: 0n, max: 10n ** 24n });
 const gas = fc.bigInt({ min: 0n, max: 10_000_000n });

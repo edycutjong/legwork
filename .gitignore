@@ -17,4 +17,4 @@ broadcast/
 # Lighthouse
 .lighthouseci/
 # kitchen media is synced, never authored here
-assets/
+/assets/

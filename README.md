@@ -233,7 +233,7 @@ shares, not an Arc feature; the recheck's price equality is the guard that would
 
 ## 🚀 Getting Started
 
-### For reviewers — 30 seconds, no clone
+### For reviewers — the 60-second path, no clone
 **Run the seeded order** (any wallet holding a few cents of USDC on Arc): open
 [`edycutjong.github.io/legwork-arc/#/o/1`](https://edycutjong.github.io/legwork-arc/#/o/1), press **Execute — anyone can**,
 read the receipt. The payee gets 0.02 USDC; you get the metered gas back plus a 0.01 USDC tip. Two runs are left, first come — and since the order has been due since
@@ -279,7 +279,7 @@ npm run security-scan   # npm audit + license check + gitleaks over the full his
 npm run bench -- --n 5  # ≈ a cent of real gas: creates, runs 5×, cancels its own order (needs a keystore)
 ```
 
-**6-stage pipeline** (`.github/workflows/ci.yml`): Quality (web on Node 22/24 + Foundry) → Security (gitleaks full history, npm audit, licenses) → Build + JS budget + readiness gate → E2E → Lighthouse → Deploy gate to `gh-pages`. CodeQL (TypeScript + Python), Dependabot (npm · actions · submodule, grouped, monthly, no majors) and semantic releases from conventional commits run beside it.
+**6-stage pipeline** (`.github/workflows/ci.yml`): Quality (web on Node 22/24 + Foundry) → Security (gitleaks over the full history blocks; npm audit and the license check are advisory) → Build + JS budget + readiness gate → E2E → Lighthouse (accessibility is the hard gate) → Deploy gate to `gh-pages`. CodeQL (TypeScript + Python), Dependabot (npm · actions · submodule, grouped, monthly, no majors) and semantic releases from conventional commits run beside it.
 
 | Layer | Tool | Status |
 |---|---|---|
@@ -289,9 +289,9 @@ npm run bench -- --n 5  # ≈ a cent of real gas: creates, runs 5×, cancels its
 | E2E | Playwright, 4 specs on chromium + Pixel 7, incl. live mainnet reads | ✅ |
 | Lint / types | oxlint · tsc | ✅ |
 | Security (SAST) | CodeQL | ✅ |
-| Security (SCA) | Dependabot + npm audit | ✅ |
+| Security (SCA) | Dependabot alerts + automated fixes · `npm audit --audit-level=high` (advisory in CI) | ✅ |
 | Secret scanning | gitleaks, full history, in CI and before every push | ✅ |
-| Performance | Lighthouse CI (accessibility ≥ 0.9 hard gate) | ✅ |
+| Performance | Lighthouse CI — accessibility ≥ 0.9 fails the pipeline; performance / best-practices / SEO warn | ✅ |
 
 ---
 

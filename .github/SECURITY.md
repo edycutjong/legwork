@@ -23,7 +23,7 @@
 
 Known, documented limits (not vulnerabilities): the `2 × basefee` cap is a bound on a block producer who also executes, not a
 fix; a contract payee needing more than the 30,000-gas stipend is paused on every run; a payer that is a contract refusing native
-USDC cannot cancel. See README §7.
+USDC cannot cancel. See README → *Honest limits*.
 
 ## Reporting a vulnerability
 Please **do not** open a public issue for security vulnerabilities. Report privately:

@@ -158,9 +158,8 @@ jobs:
         with:
           name: dist
           path: dist/
-      - name: Lighthouse CI (accessibility ≥ 0.9 is the hard gate)
-        run: npx --yes @lhci/cli@0.14.0 autorun
-        continue-on-error: true
+      - name: Lighthouse CI (accessibility ≥ 0.9 is the hard gate; performance / best-practices / SEO warn)
+        run: npx --yes @lhci/cli@0.15.1 autorun
 
   # ── STAGE 6: Deploy gate → GitHub Pages (main only) ─────────────────
   deploy:

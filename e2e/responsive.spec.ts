@@ -6,6 +6,9 @@ for (const [name, width, height] of [['mobile', 375, 740], ['tablet', 768, 1024]
     await page.setViewportSize({ width, height });
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'New order' })).toBeVisible();
+    // the open-orders table is the widest thing on the page — measure only once the RPC has filled it (or failed)
+    await expect(page.locator('.orders table, .orders .notice, .orders p.muted').first()).toBeVisible({ timeout: 30_000 });
+    await page.waitForTimeout(500);
     const scrollW = await page.evaluate(() => document.documentElement.scrollWidth);
     expect(scrollW).toBeLessThanOrEqual(width);
     const mast = await page.locator('.masthead').boundingBox();
