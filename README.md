@@ -27,7 +27,7 @@ dollar, so the refund is arithmetic.
 </div>
 
 <p align="center">
-  <img src="docs/assets/readme-hero-animated.svg" alt="Legwork — one transaction splits the order's ink deposit: payment to the payee, exact copper gas back to whoever ran it" width="100%">
+  <img src="docs/assets/readme-hero-animated.svg" alt="Legwork — One transaction splits the order's ink deposit: payment to the payee, exact copper gas back to whoever ran it." width="100%">
 </p>
 
 ---

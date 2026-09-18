@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Legwork — one transaction splits the order's ink deposit: payment to the payee, exact copper gas back to whoever ran it">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Legwork — One transaction splits the order's ink deposit: payment to the payee, exact copper gas back to whoever ran it.">
 <!-- STORYBOARD (dur 6s — must equal this file's single master dur)
   0-10%   steady state: the receipt plate, its torn edge, the ink stride, the copper return and the meter tick all visible (poster rule)
   10-25%  trigger:      the stride re-draws itself left → right — the executor steps in                              data-story="beat-2"
