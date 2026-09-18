@@ -1,0 +1,102 @@
+{
+  "chainId": 5042,
+  "rpc": "https://rpc.mainnet.arc.io",
+  "explorer": "https://explorer.arc.io",
+  "deployer": "0xA8965A47c9b6ed34F47B374f36cF6c752D24852a",
+  "payeeDemo": "0x352e5cDea885DBCAbe850259CA8AA6759b5aAA60",
+  "payeePrefundTx": "0x63087270e751ba502876679396aef9872b14ebb2a92244b8da57c230d82a57f2",
+  "contract": {
+    "address": "0x68a92aF2Be2e6A640a19508a0fe44cbc8B2C62E2",
+    "overhead": 32503,
+    "block": 21487050,
+    "tx": "0xc79a26e0b241ca64a5d683c020abe7032bd518d1052c28ade0705655c98eaf68",
+    "deployGasUsed": 984847,
+    "runtimeCodeKeccak": "0x81ae63c2a4db4b0f93e76eb67239ba13f33e563eaff23783f637fab93c11363f",
+    "note": "runtime code == forge build output with the immutable OVERHEAD filled in (see scripts/preflight.py --bytecode)"
+  },
+  "calibration": {
+    "address": "0x16B4101605c496C7Fbe54490C6467eeF996EA775",
+    "overhead": 31400,
+    "block": 21486875,
+    "tx": "0xaf02db00fd6336ddd2946619b80226a51b08e0abb0149084593dd3f2550a6a5a",
+    "runtimeCodeKeccak": "0x3d4399f435debc7200deddf91673335d5cf19ca4b509743b0442914ece7178fc",
+    "scratchOrder": {
+      "id": 1,
+      "create": "0x8dd85462435e4a0fb0be757f483963c7fcdbdc5d2667a3668375ea0705ddd378",
+      "runs": [
+        "0xc97ed05731a9911c8bb913bffb9e48bfc2a5ff27e16451a18232e55ac2345535",
+        "0x1a9cbf7cee62a313b17b9db7c773a6843b53172282435c5bb4f7b7a49b1f12c8",
+        "0xf56ee66c5b8ab8f1bf89429e0b0e91bda3f19055de1dbddcd47b02c8d072fc8a"
+      ],
+      "gasUsed": [
+        58030,
+        58030,
+        58030
+      ],
+      "gasMetered": [
+        56927,
+        56927,
+        56927
+      ],
+      "drift": [
+        1103,
+        1103,
+        1103
+      ],
+      "cancel": "0x3af4a231d8c759050f2650ca18a9924306eabd2740f94ad79c22bf937f03d8c4"
+    },
+    "result": "drift constant at 1103 gas across three runs (spread 0) -> OVERHEAD 31400 + 1103 = 32503"
+  },
+  "localBuildDeployedBytecodeKeccakWithZeroImmutable": "0x8b4d50713dff791d98cf5f6ccc4c3afaa551a976fc4277736980cbcf4eefb84b",
+  "rejector": {
+    "address": "0x1c17C16177f2aC609440ea20c00D0e108F617c47",
+    "tx": "0x27fd24f5a2069bf69cdda497f421eb2c2e515ab7b60a26c765093e98000dfd00"
+  },
+  "orders": {
+    "live": {
+      "id": 1,
+      "create": "0xe43cfe61e4c3310f0577cbca8e1ddf05851cdfe93ec63c902a02ba37e0343a9e",
+      "createBlock": 21487556,
+      "params": {
+        "payee": "0x352e5cDea885DBCAbe850259CA8AA6759b5aAA60",
+        "amount": "20000000000000000",
+        "interval": 60,
+        "tip": "10000000000000000",
+        "maxGasPrice": "100000000000",
+        "deposit": "100000000000000000"
+      },
+      "firstRun": "0x651700ee3f058685b0cdb896a707f5e5e7e8c507076a3f0f4d6816f3d6e25f0b",
+      "firstRunBlock": 21487558
+    },
+    "rejecting": {
+      "id": 2,
+      "create": "0x6d9989fc5e6622d6dd6df96a98c860c472a28a5130651daa05fe36bd7fffdaf5",
+      "createBlock": 21487560,
+      "params": {
+        "payee": "0x1c17C16177f2aC609440ea20c00D0e108F617c47",
+        "amount": "10000000000000000",
+        "interval": 60,
+        "tip": "10000000000000000",
+        "maxGasPrice": "100000000000",
+        "deposit": "50000000000000000"
+      },
+      "firstRun": "0xf4cdeb7523c64082f9e09fa3bf738fd676bad1ef401c4f7c9622d0d41c3d71b7",
+      "firstRunBlock": 21487562
+    },
+    "capped": {
+      "id": 3,
+      "create": "0xff7344dd8b19f6a593567bcfffb139421f409cb883b1db1c0bc7740ee5383997",
+      "createBlock": 21487564,
+      "params": {
+        "payee": "0x352e5cDea885DBCAbe850259CA8AA6759b5aAA60",
+        "amount": "10000000000000000",
+        "interval": 60,
+        "tip": "10000000000000000",
+        "maxGasPrice": "20000000000",
+        "deposit": "50000000000000000"
+      },
+      "firstRun": "0x76d508646679f86e55fbd50fe05b614a61cfa2cfa2721162abe7665f92343eaf",
+      "firstRunBlock": 21487566
+    }
+  }
+}

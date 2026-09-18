@@ -9,3 +9,4 @@ coverage/
 out/
 cache/
 broadcast/
+!.env.example
