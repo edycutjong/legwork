@@ -81,7 +81,7 @@ describe('decodeReceipt on the calibration contract (0xc97ed057…)', () => {
 });
 
 describe("a receipt from a different contract (the builder's 2026-09-17 throwaway metering contract)", () => {
-  const j = JSON.parse(readFileSync('proof/probe/gasmeter-2026-09-17-0x75e398.json', 'utf8'));
+  const j = JSON.parse(readFileSync('proof/gasmeter-2026-09-17/0x75e398007e8764d7871d4209f57d40c4156081edfa76187b06dff75107c0e8c1.json', 'utf8'));
   const x = decodeReceipt(fromJsonReceipt(j), '0xcEaFD715562fD7c07363Ff7C86ca36EB37A32fb6');
   it('still yields the system-emitter legs and the real fee, with no Executed event', () => {
     expect(x.executed).toBeUndefined();
