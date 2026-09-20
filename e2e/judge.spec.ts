@@ -12,6 +12,6 @@ test('#/judge returns the claim, the 60-second path, receipts, reproduce and lim
   await expect(card).toContainText('drift 0');
   await expect(card).toContainText('forge test && npm install && npm test && npm run recheck');
   await expect(card.getByRole('heading', { name: 'What we do not claim' })).toBeVisible();
-  await expect(card.getByRole('link', { name: 'repository' })).toHaveAttribute('href', 'https://github.com/edycutjong/legwork-arc');
+  await expect(card.getByRole('link', { name: 'repository' })).toHaveAttribute('href', 'https://github.com/edycutjong/legwork');
   await expect(card.getByRole('link', { name: '#/o/1' })).toHaveAttribute('href', '#/o/1');
 });

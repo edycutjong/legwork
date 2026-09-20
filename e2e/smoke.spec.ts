@@ -22,7 +22,7 @@ test.describe('smoke', () => {
     await expect(page).toHaveTitle(/Legwork/);
     await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /exact gas|metered gas/);
     await expect(page.locator('link[rel="icon"]')).toHaveAttribute('href', /favicon\.svg/);
-    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /legwork-arc\/og-image\.png(\?v=\d+)?$/);
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /^https:\/\/legwork\.edycu\.dev\/og-image\.png(\?v=\d+)?$/);
     await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', /Legwork/);
     await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute('content', 'summary_large_image');
     const og = await page.request.get('/og-image.png');

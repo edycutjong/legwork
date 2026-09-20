@@ -8,8 +8,8 @@
 
   <br/>
 
-  [![Live page](https://img.shields.io/badge/🚀_Live-Page-A4471A?style=for-the-badge)](https://edycutjong.github.io/legwork-arc/)
-  [![For reviewers](https://img.shields.io/badge/🧑‍⚖️_For-Reviewers-1E6F48?style=for-the-badge)](https://edycutjong.github.io/legwork-arc/#/judge)
+  [![Live page](https://img.shields.io/badge/🚀_Live-Page-A4471A?style=for-the-badge)](https://legwork.edycu.dev/)
+  [![For reviewers](https://img.shields.io/badge/🧑‍⚖️_For-Reviewers-1E6F48?style=for-the-badge)](https://legwork.edycu.dev/#/judge)
   [![Contract on Arc mainnet](https://img.shields.io/badge/⛓️_Contract-0x8E2F…1ccb-1C1A16?style=for-the-badge)](https://explorer.arc.io/address/0x8E2F8AFC29e9dc127103CD6AD5BCfBe661141ccb)
   [![Built for Arc Microgrants](https://img.shields.io/badge/DoraHacks-Arc_Microgrants-8b5cf6?style=for-the-badge)](https://dorahacks.io/hackathon/arc-microgrants/detail)
 
@@ -26,8 +26,8 @@
   ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)
   ![bench](https://img.shields.io/badge/bench-30%2F30_drift_0-1E6F48?style=flat)
   [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
-  [![CI](https://github.com/edycutjong/legwork-arc/actions/workflows/ci.yml/badge.svg)](https://github.com/edycutjong/legwork-arc/actions/workflows/ci.yml)
-  [![Release](https://img.shields.io/github/v/release/edycutjong/legwork-arc?sort=semver)](https://github.com/edycutjong/legwork-arc/releases/latest)
+  [![CI](https://github.com/edycutjong/legwork/actions/workflows/ci.yml/badge.svg)](https://github.com/edycutjong/legwork/actions/workflows/ci.yml)
+  [![Release](https://img.shields.io/github/v/release/edycutjong/legwork?sort=semver)](https://github.com/edycutjong/legwork/releases/latest)
 
 </div>
 
@@ -39,7 +39,7 @@
 
 That is order #5 on Arc mainnet, created from the page's form and run from its **Execute** button
 ([`0x2f6a352d…0c95`](https://explorer.arc.io/tx/0x2f6a352d11823a37ad085151067856131833ef978445fbed5941e7d17b5b0c95)) — the page renders it at
-[`#/o/5/tx/0x2f6a…`](https://edycutjong.github.io/legwork-arc/#/o/5/tx/0x2f6a352d11823a37ad085151067856131833ef978445fbed5941e7d17b5b0c95) from the chain,
+[`#/o/5/tx/0x2f6a…`](https://legwork.edycu.dev/#/o/5/tx/0x2f6a352d11823a37ad085151067856131833ef978445fbed5941e7d17b5b0c95) from the chain,
 although the order itself has since been cancelled. It is the second of the two
 page-driven orders; the first, #4 ([`0xf71fffd0…7154`](https://explorer.arc.io/tx/0xf71fffd0f3dee7e43f9df1ba87bc7f954e97d29d42a59435ead45485b5dd7154)), read the same to the wei.
 Two of the five lines come from the contract's own event; one comes from the transaction receipt and nowhere else.
@@ -153,7 +153,7 @@ shares, not an Arc feature; the recheck's price equality is the guard that would
 
 | | |
 |---|---|
-| Live page | [edycutjong.github.io/legwork-arc](https://edycutjong.github.io/legwork-arc/) · reviewer page [`#/judge`](https://edycutjong.github.io/legwork-arc/#/judge) · seeded order [`#/o/1`](https://edycutjong.github.io/legwork-arc/#/o/1) |
+| Live page | [legwork.edycu.dev](https://legwork.edycu.dev/) · reviewer page [`#/judge`](https://legwork.edycu.dev/#/judge) · seeded order [`#/o/1`](https://legwork.edycu.dev/#/o/1) |
 | Contract | [`0x8E2F8AFC29e9dc127103CD6AD5BCfBe661141ccb`](https://explorer.arc.io/address/0x8E2F8AFC29e9dc127103CD6AD5BCfBe661141ccb) on Arc mainnet (5042) · `OVERHEAD = 32503` gas, calibrated on-chain (three runs, drift 1,103 on all three, spread 0); v2 of the contract — v1 and the calibration deploy are kept in the record (Corrections below) · on-chain runtime bytecode == `forge build` with the immutable filled (`scripts/preflight.py --bytecode`) |
 | Open orders | #1 `live` (0.02 USDC / 60 s / tip 0.01 — **two runs left for reviewers, first come**; due since 2026-09-18, the missed periods are owed, so one wallet can take both back-to-back) · #2 `rejecting` (paused: its payee is the [`Rejector`](./contracts/Rejector.sol) `0x1c17C16177f2aC609440ea20c00D0e108F617c47`) · #3 `capped` (`maxGasPrice` 20 Gwei) |
 | Key receipts | hero [`0x2f6a352d…0c95`](https://explorer.arc.io/tx/0x2f6a352d11823a37ad085151067856131833ef978445fbed5941e7d17b5b0c95) · first live run [`0x0a598c84…d04d`](https://explorer.arc.io/tx/0x0a598c846c6a6fd0e9f07fcee1f6d643d39bb2c2483ae0e3465ee3c6775cd04d) · paused [`0xd07f9fb9…dc64`](https://explorer.arc.io/tx/0xd07f9fb9f06deeab35a0e795ab0440f8150fb60e4f816993d57bee6a1470dc64) · capped [`0x6595b5a6…3c98`](https://explorer.arc.io/tx/0x6595b5a60548ab65b879f9012142764f3118d582fdc29d5dc8da2b457d413c98) · `NotDue` [`0x4fc9a3af…56a6`](https://explorer.arc.io/tx/0x4fc9a3af02079e9bad40001108936c268a8269c88c231e6633517db854f556a6) |
@@ -235,10 +235,10 @@ shares, not an Arc feature; the recheck's price equality is the guard that would
 
 ### For reviewers — the 60-second path, no clone
 **Run the seeded order** (any wallet holding a few cents of USDC on Arc): open
-[`edycutjong.github.io/legwork-arc/#/o/1`](https://edycutjong.github.io/legwork-arc/#/o/1), press **Execute — anyone can**,
+[`legwork.edycu.dev/#/o/1`](https://legwork.edycu.dev/#/o/1), press **Execute — anyone can**,
 read the receipt. The payee gets 0.02 USDC; you get the metered gas back plus a 0.01 USDC tip. Two runs were left at the time of writing, first come — and since the order has been due since
 2026-09-18, the missed periods are owed, so one reviewer can take both back-to-back (the card says how many are left right now). No wallet? Open the
-[committed hero receipt](https://edycutjong.github.io/legwork-arc/#/o/5/tx/0x2f6a352d11823a37ad085151067856131833ef978445fbed5941e7d17b5b0c95) — read from the chain, no signing.
+[committed hero receipt](https://legwork.edycu.dev/#/o/5/tx/0x2f6a352d11823a37ad085151067856131833ef978445fbed5941e7d17b5b0c95) — read from the chain, no signing.
 
 **Build your own in 60:** *New order* → payee, amount, interval, tip → **Create** (the deposit for one run is quoted from the latest
 base fee) → the card opens *Due* → **Execute**. Reading the page needs no wallet at all; signing uses the injected one and
@@ -249,7 +249,7 @@ offers to add Arc (chain 5042) if it is missing. Prerequisite: USDC on Arc — b
 
 ### Installation
 ```sh
-git clone https://github.com/edycutjong/legwork-arc && cd legwork-arc && git submodule update --init   # forge-std
+git clone https://github.com/edycutjong/legwork && cd legwork && git submodule update --init   # forge-std
 npm install
 npm run dev                # the page, against Arc mainnet, read-only until you connect a wallet
 ```

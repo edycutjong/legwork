@@ -141,7 +141,7 @@ ok('no private paths or key material in tracked files')
 # 6. README essentials
 if addr and addr.lower() not in readme.lower():
     fail('README does not name the production contract address')
-if 'https://edycutjong.github.io/legwork-arc/' not in readme:
+if 'https://legwork.edycu.dev/' not in readme:
     fail('README lacks the live URL')
 ok('README names the contract and the live URL')
 

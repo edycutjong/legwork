@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://edycutjong.github.io/legwork-arc/sitemap.xml
+Sitemap: https://legwork.edycu.dev/sitemap.xml

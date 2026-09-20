@@ -26,7 +26,7 @@ on the 36 runs of the retired v1) and what happens when things go wrong.
 
 ## Try it in 30 seconds (any wallet holding a few cents of USDC on Arc)
 
-1. Open `https://edycutjong.github.io/legwork-arc/#/o/1` (or run the page locally: `npm install && npm run dev`).
+1. Open `https://legwork.edycu.dev/#/o/1` (or run the page locally: `npm install && npm run dev`).
 2. Press **Execute — anyone can**. The page sends `execute(1)` with priority 0 at `max(eth_gasPrice, 20 Gwei)`.
 3. Read the receipt: the payee got 0.02 USDC, you got the metered gas back plus 0.01 USDC, and the real fee from the receipt is printed beside the refund.
 
@@ -38,7 +38,7 @@ The `live` order was funded for three runs; one was used above, so two are left 
 ## Reproduce
 
 ```sh
-git clone https://github.com/edycutjong/legwork-arc && cd legwork-arc
+git clone https://github.com/edycutjong/legwork && cd legwork
 git submodule update --init          # forge-std
 forge test                            # 42 Foundry cases: unit + 2 fuzz suites + 6 invariants (≈ 1 s)
 npm install && npm test               # 36 vitest cases (incl. 4 fast-check properties × 5,000 = 20,000 generated cases); the receipt decoder's fixtures are committed mainnet receipts (≈ 1 s)

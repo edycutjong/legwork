@@ -1,5 +1,5 @@
 {
-  "name": "legwork-arc",
+  "name": "legwork",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -42,9 +42,9 @@
     "vite": "^6.0.0",
     "vitest": "^4.1.11"
   },
-  "homepage": "https://edycutjong.github.io/legwork-arc/",
+  "homepage": "https://legwork.edycu.dev/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/edycutjong/legwork-arc.git"
+    "url": "git+https://github.com/edycutjong/legwork.git"
   }
 }

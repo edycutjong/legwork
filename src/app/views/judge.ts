@@ -10,7 +10,7 @@ const LIVE_TX = '0x0a598c846c6a6fd0e9f07fcee1f6d643d39bb2c2483ae0e3465ee3c6775cd
 const PAUSED_TX = '0xd07f9fb9f06deeab35a0e795ab0440f8150fb60e4f816993d57bee6a1470dc64';
 const NOTDUE_TX = '0x4fc9a3af02079e9bad40001108936c268a8269c88c231e6633517db854f556a6';
 const CAPPED_TX = '0x6595b5a60548ab65b879f9012142764f3118d582fdc29d5dc8da2b457d413c98';
-const REPO = 'https://github.com/edycutjong/legwork-arc';
+const REPO = 'https://github.com/edycutjong/legwork';
 
 export function renderJudge(root: HTMLElement) {
   const live = (DEPLOY.orders as any)?.live?.id ?? 1;
@@ -41,7 +41,7 @@ export function renderJudge(root: HTMLElement) {
       ),
 
       h('h3', {}, 'Reproduce'),
-      h('pre', { class: 'mono' }, 'git clone https://github.com/edycutjong/legwork-arc && cd legwork-arc && git submodule update --init\nforge test && npm install && npm test && npm run recheck && python3 scripts/preflight.py --bytecode'),
+      h('pre', { class: 'mono' }, 'git clone https://github.com/edycutjong/legwork && cd legwork && git submodule update --init\nforge test && npm install && npm test && npm run recheck && python3 scripts/preflight.py --bytecode'),
       h('p', { class: 'muted' }, h('code', {}, 'npm run recheck'), ' recomputes all 75 committed execute receipts from raw chain data — six equalities per row, exit code is the verdict. No key is needed for any of it.'),
 
       h('h3', {}, 'What we do not claim'),

@@ -2,15 +2,15 @@
 
 **Standing USDC orders anyone can run — and be repaid the exact gas, in the same dollar, in the same transaction.**
 
-Live page: **https://edycutjong.github.io/legwork-arc/#/judge** (this file, as a page — no auth, no cookies, no wallet needed to read).
+Live page: **https://legwork.edycu.dev/#/judge** (this file, as a page — no auth, no cookies, no wallet needed to read).
 Arc mainnet, chain 5042. No backend, no oracle, no keeper network, nothing mocked: every number on the site is read from the chain in the browser.
 
 ## The 60-second path
 
-1. Open the seeded order [`#/o/1`](https://edycutjong.github.io/legwork-arc/#/o/1) — it is Due; the card quotes the deposit, the reserve and the refund cap from the latest base fee.
+1. Open the seeded order [`#/o/1`](https://legwork.edycu.dev/#/o/1) — it is Due; the card quotes the deposit, the reserve and the refund cap from the latest base fee.
 2. Press **Execute — anyone can** with any wallet holding a few cents of USDC on Arc (the page offers to add the chain). One transaction.
 3. Read the receipt: the payee's amount, your refund (`gasMetered × price`), the tip, the real fee from the receipt, and the drift between them — side by side, decoded in the browser.
-4. No wallet? Open the committed hero run [`#/o/5/tx/0x2f6a…0c95`](https://edycutjong.github.io/legwork-arc/#/o/5/tx/0x2f6a352d11823a37ad085151067856131833ef978445fbed5941e7d17b5b0c95) — the same receipt, read from the chain (the order has since been cancelled; the receipt has not).
+4. No wallet? Open the committed hero run [`#/o/5/tx/0x2f6a…0c95`](https://legwork.edycu.dev/#/o/5/tx/0x2f6a352d11823a37ad085151067856131833ef978445fbed5941e7d17b5b0c95) — the same receipt, read from the chain (the order has since been cancelled; the receipt has not).
 
 ## Receipts
 
@@ -26,7 +26,7 @@ Arc mainnet, chain 5042. No backend, no oracle, no keeper network, nothing mocke
 ## Reproduce (no key needed)
 
 ```sh
-git clone https://github.com/edycutjong/legwork-arc && cd legwork-arc && git submodule update --init
+git clone https://github.com/edycutjong/legwork && cd legwork && git submodule update --init
 forge test && npm install && npm test && npm run recheck && python3 scripts/preflight.py --bytecode
 ```
 
@@ -43,6 +43,6 @@ verdict. `npm run bench -- --n 5` repeats the bench for about a cent of real gas
 
 ## Links
 
-- Repository: https://github.com/edycutjong/legwork-arc
-- Live app: https://edycutjong.github.io/legwork-arc/
+- Repository: https://github.com/edycutjong/legwork
+- Live app: https://legwork.edycu.dev/
 - [`DEMO.md`](./DEMO.md) — every edge case with one mainnet transaction · [`ARCHITECTURE.md`](./ARCHITECTURE.md) — the contract line by line · [`README.md`](./README.md)
