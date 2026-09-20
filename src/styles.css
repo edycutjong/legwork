@@ -34,7 +34,7 @@
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
-main { display: block; padding-top: 12px; outline: none; }
+main { display: block; padding-top: 12px; outline: none; min-height: 100vh; } /* reserved before the shell renders: the footer starts below the fold instead of at the top and jumping down (CLS 0.25 → 0) */
 html, body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.55 var(--sans); }
 body { position: relative; min-height: 100vh; -webkit-font-smoothing: antialiased; }
 /* the ground: faint receipt lines and one warm copper glow, painted once and fixed */
