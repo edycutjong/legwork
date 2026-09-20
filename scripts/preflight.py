@@ -55,8 +55,21 @@ n_forge = None
 if r.returncode == 0:
     try:
         j = json.loads(r.stdout)
-        n_forge = sum(len(s['test_results']) for s in j.values())
-        failed = [t for s in j.values() for t, v in s['test_results'].items() if v['status'] != 'Success']
+        # forge >= 1.8 folds an invariant suite into ONE entry carrying
+        # invariant_predicate_results (one per invariant_* function); older
+        # forge lists each invariant as its own entry. Count predicates when
+        # present so the total is the same on both.
+        n_forge, failed = 0, []
+        for s in j.values():
+            for t, v in s['test_results'].items():
+                preds = v.get('invariant_predicate_results') or []
+                if preds:
+                    n_forge += len(preds)
+                    failed += [q['name'] for q in preds if q['status'] != 'Success']
+                else:
+                    n_forge += 1
+                    if v['status'] != 'Success':
+                        failed.append(t)
         if failed:
             fail(f'forge test failures: {failed}')
     except Exception as e:
