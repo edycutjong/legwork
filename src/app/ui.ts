@@ -94,6 +94,6 @@ export function errorText(e: any): string {
     }
   }
   if (/user rejected|denied/i.test(m)) return 'Signature rejected in the wallet.';
-  if (/rate limit|exceeds defined limit|\b429\b|-32005/i.test(m)) return 'The public Arc RPC rate-limited this read (it answers HTTP 429 in bursts). Nothing is wrong with the order — try again in a few seconds.';
+  if (/rate limit|exceeds defined limit|\b429\b|-32005/i.test(m)) return 'The public Arc RPC rate-limited this read (it answers HTTP 429 in bursts). Nothing is wrong on-chain — try again in a few seconds.';
   return m.length > 220 ? m.slice(0, 220) + '…' : m;
 }

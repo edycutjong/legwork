@@ -1,6 +1,6 @@
 import './styles.css';
 import { explorerAddress } from './lib/chain';
-import { CONTRACT, DEPLOY, chainOk, overheadOnChain } from './app/rpc';
+import { CONTRACT, DEPLOY, chainOk, overheadRead } from './app/rpc';
 import { renderHome } from './app/views/home';
 import { renderOrder } from './app/views/order';
 import { renderJudge } from './app/views/judge';
@@ -32,7 +32,7 @@ app.append(
     h('footer', { class: 'foot' },
       h('span', {}, `Arc mainnet · chain 5042 · contract `, h('a', { href: explorerAddress(CONTRACT), target: '_blank', rel: 'noopener', class: 'mono' }, CONTRACT)),
       overheadSlot,
-      h('span', {}, 'No backend: every number on this page comes from eth_call, eth_getLogs, the latest block base fee, eth_gasPrice and the transaction receipt.'),
+      h('span', {}, 'No backend: every live number on this page — orders, quotes, receipts, runs — comes from eth_call, eth_getLogs, the latest block base fee, eth_gasPrice and the transaction receipt. The bench figures are copied from the committed proof.'),
     ),
   ),
 );
@@ -55,6 +55,7 @@ async function route() {
     const current = href === hash || (href === '#/' && hash === '#/') ;
     if (current) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
   }
+  document.title = m ? `Order #${m[1]}${m[2] ? ' · receipt' : ''} · Legwork` : hash === '#/judge' ? 'For reviewers · Legwork' : 'Legwork — standing USDC orders on Arc';
   const view = h('div');
   main.replaceChildren(view);
   if (m) await renderOrder(view, BigInt(m[1]), { tx: m[2] as `0x${string}` | undefined });
@@ -65,7 +66,7 @@ async function route() {
 window.addEventListener('hashchange', () => { window.scrollTo({ top: 0 }); route(); }); // registered before the first render, so an early navigation is never lost
 // The first view renders before any RPC round-trip (no empty frame, no shift when it fills); the chain check runs beside it.
 route();
-overheadOnChain().then((o) => (overheadSlot.textContent = `OVERHEAD() ${o} gas (read from the contract) · REFUND_CEIL_GAS 120,000 · payee stipend 30,000`));
+overheadRead().then(({ value, fromChain }) => (overheadSlot.textContent = fromChain ? `OVERHEAD() ${value} gas (read from the contract) · REFUND_CEIL_GAS 120,000 · payee stipend 30,000` : `OVERHEAD ${value} gas (deploy record — the contract read was rate-limited) · REFUND_CEIL_GAS 120,000 · payee stipend 30,000`));
 chainOk().then((ok) => {
   if (!ok) rpcNotice.replaceChildren(notice('error', 'The Arc RPC (https://rpc.mainnet.arc.io) is unreachable or is not chain 5042. The page reads everything from it and has no fallback.'));
 });

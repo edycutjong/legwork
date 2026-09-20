@@ -20,7 +20,7 @@ export function renderJudge(root: HTMLElement) {
     h('div', { class: 'card judge' },
       h('div', { class: 'card-head' }, h('h2', {}, 'For reviewers'), h('span', { class: 'badge due' }, 'ARC MAINNET · 5042')),
       h('p', { class: 'claim' }, CLAIM),
-      h('p', { class: 'muted' }, 'No backend, no oracle, no keeper network, nothing mocked: every number on this site is read from the chain in your browser. No account, no cookies, no key.'),
+      h('p', { class: 'muted' }, 'No backend, no oracle, no keeper network, nothing mocked: every live number on this site is read from the chain in your browser; the bench figures below are copied from the committed proof. No account, no cookies, no key.'),
 
       h('h3', {}, 'The 60-second path'),
       h('ol', { class: 'steps' },
@@ -41,14 +41,14 @@ export function renderJudge(root: HTMLElement) {
       ),
 
       h('h3', {}, 'Reproduce'),
-      h('pre', { class: 'mono' }, 'git clone https://github.com/edycutjong/legwork && cd legwork && git submodule update --init\nforge test && npm install && npm test && npm run recheck && python3 scripts/preflight.py --bytecode'),
+      h('pre', { class: 'mono', tabindex: '0' }, 'git clone https://github.com/edycutjong/legwork && cd legwork && git submodule update --init\nforge test && npm install && npm test && npm run recheck && python3 scripts/preflight.py --bytecode'),
       h('p', { class: 'muted' }, h('code', {}, 'npm run recheck'), ' recomputes all 75 committed execute receipts from raw chain data — six equalities per row, exit code is the verdict. No key is needed for any of it.'),
 
       h('h3', {}, 'What we do not claim'),
       h('ul', { class: 'limits' },
         h('li', {}, 'Executors are two wallets of ours in practice (the page button, the bench script, the demo payee). Nobody else has run an order yet.'),
         h('li', {}, 'All bench rows sit at Arc’s 20 Gwei base fee; the 2 × basefee cap is exercised by tests and one capped receipt, not by the bench.'),
-        h('li', {}, 'The drift bound (≤ 50 gas, measured 0) holds for plain-account executors; a contract executor’s own code runs outside the metered window and pays for itself.'),
+        h('li', {}, 'The drift bound (≤ 50 gas; measured 0 on paid runs, −6 on the refused-payment branch) holds for plain-account executors; a contract executor’s own code runs outside the metered window and pays for itself.'),
         h('li', {}, 'Explorer source verification was not attempted (its API sits behind a challenge page); the on-chain runtime bytecode is checked byte-for-byte against the build instead.'),
         h('li', {}, 'The contract’s status / needed / priceCap views read block.basefee, which a bare eth_call sees as 0 on Arc’s RPC; this page computes the same arithmetic from the block’s baseFeePerGas and never uses them.'),
       ),

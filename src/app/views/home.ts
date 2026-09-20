@@ -132,7 +132,7 @@ export async function renderHome(root: HTMLElement) {
       h('div', { class: 'section-head' }, h('span', { class: 'kicker' }, 'The mechanism'), h('h2', { id: 'exec-h' }, 'One call. The order pays whoever ran it.'), h('p', {}, 'Inside ', h('code', {}, 'execute()'), ' the contract opens a metered window with its first statement, pays the payee, closes the window, and pays the executor ', h('strong', {}, 'exactly the gas it measured'), ' plus the tip — out of the order’s own deposit. Gas and deposit are one asset, so the refund needs no conversion.')),
       h('div', { class: 'exec' },
         h('div', { class: 'card exec-stage' },
-          h('div', { class: 'dg-scroll', html: EXEC_DIAGRAM }),
+          h('div', { class: 'dg-wrap' }, h('div', { class: 'dg-scroll', html: EXEC_DIAGRAM })),
           h('p', { class: 'swipe-hint' }, 'swipe → to see the whole call'),
           h('div', { class: 'mono-eq', 'aria-label': 'The receipt equalities' },
             h('div', { class: 'eq b6' }, h('b', {}, 'refund = gasMetered × ', h('span', { class: 'cu' }, 'price')), '= gasUsed × effectiveGasPrice, to the wei · 58,415 × 20 Gwei = 0.0011683 USDC'),
@@ -199,7 +199,7 @@ export async function renderHome(root: HTMLElement) {
   const stat = (big: string, what: string) => h('div', { class: 'stat', role: 'listitem' }, h('b', {}, big), h('span', {}, what));
   root.append(
     h('section', { class: 'section', 'aria-labelledby': 'proof-h' },
-      h('div', { class: 'section-head' }, h('span', { class: 'kicker' }, 'Measured, not promised'), h('h2', { id: 'proof-h' }, 'Thirty real runs. Drift zero on every one.'), h('p', {}, 'One order, 1-second periods, 30 consecutive executes on Arc mainnet. Five of the thirty rows are the payee collecting its own payment. ', h('code', {}, 'npm run recheck'), ' recomputes all 75 committed execute receipts from raw chain data — six equalities per row; the exit code is the verdict.')),
+      h('div', { class: 'section-head' }, h('span', { class: 'kicker' }, 'Measured, not promised'), h('h2', { id: 'proof-h' }, 'Thirty real runs. Drift zero on every one.'), h('p', {}, 'One order, 1-second periods, 30 consecutive executes on Arc mainnet. Five of the thirty rows are the payee collecting its own payment. ', h('code', {}, 'npm run recheck'), ' recomputes all 75 committed execute receipts from raw chain data — six equalities per row; the exit code is the verdict. (107 is every mainnet transaction, deploys, creates and cancels included; 75 of them are executes.)')),
       h('div', { class: 'proof', role: 'list' },
         stat('30 / 30', 'bench runs with drift 0 (gate ≤ 50 gas)'),
         stat('58,415', 'gasUsed p50 = p95 · ≈ 0.00117 USDC at 20 Gwei'),
@@ -215,7 +215,7 @@ export async function renderHome(root: HTMLElement) {
             h('ul', {},
               h('li', {}, h('strong', {}, 'Executors are two wallets of ours in practice'), ' — the page button, the bench script, the demo payee. Nobody else has run an order yet.'),
               h('li', {}, h('strong', {}, 'All bench rows sit at Arc’s 20 Gwei base fee'), '; the 2 × basefee cap is exercised by tests and one capped receipt, not by the bench.'),
-              h('li', {}, h('strong', {}, 'The drift bound holds for plain-account executors'), ' (≤ 50 gas, measured 0); a contract executor’s own code runs outside the metered window and pays for itself.'),
+              h('li', {}, h('strong', {}, 'The drift bound holds for plain-account executors'), ' (≤ 50 gas; measured 0 on paid runs, −6 on the refused-payment branch); a contract executor’s own code runs outside the metered window and pays for itself.'),
               h('li', {}, h('strong', {}, 'Explorer source verification was not attempted'), ' (its API sits behind a challenge page); the on-chain runtime bytecode is checked byte-for-byte against the build instead.'),
               h('li', {}, h('strong', {}, 'The contract’s status / needed / priceCap views read block.basefee'), ', which a bare eth_call sees as 0 on Arc’s RPC; this page computes the same arithmetic from the block’s baseFeePerGas and never uses them.')),
             h('p', { class: 'muted', style: 'margin:14px 0 0;font-size:13.5px' }, 'All nine, with the corrections log: ', h('a', { href: `${REPO}#honest-limits-9`, target: '_blank', rel: 'noopener' }, 'README · Honest limits (9)'), '.'))),
@@ -225,7 +225,7 @@ export async function renderHome(root: HTMLElement) {
             h('a', { class: 'step', href: `#/o/${live}` }, h('span', { class: 'n' }, '1'), h('span', {}, h('b', {}, 'Run the seeded order'), h('span', { class: 'd' }, `#/o/${live} is Due · press Execute — anyone can · read the receipt`)), h('span', { class: 'go', 'aria-hidden': 'true' }, '→')),
             h('a', { class: 'step', href: `#/o/5/tx/${HERO_TX}` }, h('span', { class: 'n' }, '2'), h('span', {}, h('b', {}, 'No wallet? Read the hero receipt'), h('span', { class: 'd' }, 'order #5, decoded from the chain in the browser')), h('span', { class: 'go', 'aria-hidden': 'true' }, '→')),
             h('a', { class: 'step', href: '#/judge' }, h('span', { class: 'n' }, '3'), h('span', {}, h('b', {}, 'The reviewer page'), h('span', { class: 'd' }, 'claim · receipts · reproduce line · limits · links')), h('span', { class: 'go', 'aria-hidden': 'true' }, '→')),
-            h('pre', { class: 'mono' }, `git clone ${REPO} && cd legwork && git submodule update --init\nforge test && npm install && npm test && npm run recheck`))))),
+            h('pre', { class: 'mono', tabindex: '0' }, `git clone ${REPO} && cd legwork && git submodule update --init\nforge test && npm install && npm test && npm run recheck`))))),
   );
 
   // ---------------------------------------------------------------- reads: the latest base fee, then the list

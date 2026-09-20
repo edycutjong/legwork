@@ -1,4 +1,5 @@
 /** `#/o/<id>` — the order sheet: status, countdown, Execute (anyone), the receipt, recent runs, payer controls. */
+import { getAddress } from 'viem';
 import { explorerAddress, explorerTx } from '../../lib/chain';
 import { foldEvents, neededAt, orderStatus, priceCapAt, runsLeft, usdc18, type Order, type OrderEvent, type Run } from '../../lib/orders';
 import { decodeReceipt, type Decoded } from '../../lib/receipt';
@@ -63,7 +64,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
     const cd = h('div', { class: `countdown ${st === 'Due' ? 'due' : 'waiting'}`, 'aria-live': 'polite' }, st === 'Paused' ? 'paused' : st === 'Underfunded' ? 'underfunded' : countdown(secs));
     const dueAt = `${new Date(Number(order.nextDue) * 1000).toISOString().replace('T', ' ').slice(0, 16)} UTC`;
     const covers = runsLeft(order, hd.basefee);
-    const owedNote = owed > 1n ? h('p', { class: 'muted', style: 'font-size:13px;margin-top:-2px' }, `Due since ${dueAt} — ${owed.toLocaleString('en-US')} periods have accrued and the schedule is anchored; the deposit covers ${covers} of them, so one wallet can run it ${covers === 1n ? 'once' : covers === 2n ? 'twice' : `${covers} times`} back-to-back, one period per execute.`) : '';
+    const owedNote = owed > 1n ? h('p', { class: 'muted', style: 'font-size:13px;margin-top:-2px' }, `Due since ${dueAt} — ${owed.toLocaleString('en-US')} periods have accrued; the schedule stays anchored to the original due time and each execute advances it by one interval, so the deposit covers ${covers} of them, so one wallet can run it ${covers === 1n ? 'once' : covers === 2n ? 'twice' : `${covers} times`} back-to-back, one period per execute.`) : '';
     const runBtn = h('button', { class: 'btn wide exec', type: 'button', disabled: st !== 'Due' }, st === 'Due' ? 'Execute — anyone can' : st === 'Waiting' ? 'Execute (not due yet)' : st === 'Paused' ? 'Paused' : 'Underfunded');
     const runNote = h('p', { class: 'muted', style: 'margin-top:10px;font-size:13px;min-height:1.5em' });
     const runStatus = h('div', { style: 'margin-top:12px' });
@@ -75,7 +76,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
       cd,
       owedNote,
       h('dl', { class: 'kv' },
-        h('dt', {}, st === 'Due' ? 'due since' : 'next run due'), h('dd', {}, `${new Date(Number(order.nextDue) * 1000).toISOString().replace('T', ' ').slice(0, 19)} UTC`),
+        h('dt', {}, st === 'Due' ? 'due since' : st === 'Paused' ? 'was due' : 'next run due'), h('dd', {}, `${new Date(Number(order.nextDue) * 1000).toISOString().replace('T', ' ').slice(0, 19)} UTC`),
         h('dt', {}, 'deposit'), h('dd', {}, `${usdc18(order.deposit)} USDC`, h('small', { class: 'muted' }, ` · ${order.deposit} wei`)),
         h('dt', {}, 'runs left'), h('dd', {}, `${runsLeft(order, hd.basefee)} · one honest run needs ${usdc18(needed)} USDC`),
         h('dt', {}, 'refunded at ≤'), h('dd', {}, `${fmtGwei(cap)} · min(2 × base fee ${fmtGwei(hd.basefee)}, max ${fmtGwei(order.maxGasPrice)})`),
@@ -198,10 +199,10 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
     const net = x.executorNet!;
     box.append(
       h('div', { class: 'card-head' }, h('h2', {}, e.paid ? 'Receipt — paid' : 'Receipt — payee refused, order paused'), h('span', { class: `badge ${e.paid ? 'due' : 'paused'}` }, e.paid ? 'PAID' : 'PAUSED')),
-      h('p', { class: 'lede' }, 'Executed by ', chip(x.executor), ` in block ${x.blockNumber}. `, txLink(x.hash, 'transaction ' + short(x.hash))),
+      h('p', { class: 'lede' }, 'Executed by ', chip(getAddress(x.executor)), ` in block ${x.blockNumber}. `, txLink(x.hash, 'transaction ' + short(x.hash))),
       h('ul', { class: 'lines' },
         e.paid
-          ? line('', 'payee received', `Transfer ${short(CONTRACT)} → ${short(o.payee)} from the system emitter`, x.payeeLeg?.value ?? o.amount)
+          ? line('', 'payee received', `Transfer ${short(CONTRACT)} → ${short(o.payee)} — the EIP-7708 Transfer log Arc's system contract emits for every native USDC move`, x.payeeLeg?.value ?? o.amount)
           : line('debit', 'payee refused', o.payee === ZERO ? 'no payee leg; the amount stayed in the deposit (the order has since been cancelled)' : `no payee leg; ${usdc18(o.amount)} USDC stayed in the deposit`, 0n),
         line('credit', 'executor refunded', `Executed.refund = ${e.gasMetered} gas metered × ${fmtGwei(e.price)}`, e.refund, '+'),
         line('credit', 'executor tipped', 'Executed.tip', e.tip, '+'),
@@ -214,7 +215,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
         h('a', { href: explorerTx(x.hash), target: '_blank', rel: 'noopener' }, 'transaction'),
         h('a', { href: explorerAddress(CONTRACT), target: '_blank', rel: 'noopener' }, 'contract'),
         o.payee === ZERO ? '' : h('a', { href: explorerAddress(o.payee), target: '_blank', rel: 'noopener' }, 'payee'),
-        h('a', { href: explorerAddress(x.executor), target: '_blank', rel: 'noopener' }, 'executor')),
+        h('a', { href: explorerAddress(getAddress(x.executor)), target: '_blank', rel: 'noopener' }, 'executor')),
     );
     return box;
   }
@@ -278,7 +279,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
       const again = h('button', { class: 'btn quiet', type: 'button' }, 'Try again');
       again.addEventListener('click', () => { runsBody.replaceChildren(skTable(3, 'scanning again…')); loadRuns(true); });
       runsBody.replaceChildren(notice('error', 'History scan failed: ', errorText(e)), h('div', { class: 'actions', style: 'margin:0 0 12px' }, again));
-      older.disabled = false;
+      older.disabled = true; // nothing has been scanned yet, so there is no "in between" — Try again restarts the scan
     }
   }
   older.addEventListener('click', () => loadRuns());

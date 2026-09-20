@@ -14,13 +14,13 @@ export const DEPLOY = deploy;
 export const client = createPublicClient({ chain: arc, transport: http(RPC_URL, { batch: false }), ccipRead: false });
 
 /** The public RPC rate-limits bursts (HTTP 429 / -32005 / "exceeds defined limit"); a plain read is retried a few times, backing off. */
-async function retried<T>(f: () => Promise<T>, tries = 3): Promise<T> {
+async function retried<T>(f: () => Promise<T>, tries = 4): Promise<T> {
   for (let i = 0; ; i++) {
     try { return await f(); } catch (e: any) {
       const code = e?.code ?? e?.cause?.code, msg = String(e?.shortMessage ?? e?.message ?? '');
       const limited = code === -32005 || code === 429 || e?.status === 429 || /429|rate limit|exceeds defined limit/i.test(msg);
       if (!limited || i >= tries - 1) throw e;
-      await new Promise((r) => setTimeout(r, 700 * (i + 1)));
+      await new Promise((r) => setTimeout(r, 800 * 2 ** i)); // 0.8 · 1.6 · 3.2 s
     }
   }
 }
@@ -45,7 +45,11 @@ export async function getOrder(id: bigint): Promise<Order> {
 
 /** The calibrated constant, read from the contract itself (the deploy record is only the fallback). */
 export async function overheadOnChain(): Promise<number> {
-  try { return Number(await client.readContract({ address: CONTRACT, abi: legworkAbi, functionName: 'OVERHEAD' })); } catch { return OVERHEAD; }
+  return (await overheadRead()).value;
+}
+/** Same read, saying where the number came from — the footer must not label the fallback as a chain read. */
+export async function overheadRead(): Promise<{ value: number; fromChain: boolean }> {
+  try { return { value: Number(await retried(() => client.readContract({ address: CONTRACT, abi: legworkAbi, functionName: 'OVERHEAD' }))), fromChain: true }; } catch { return { value: OVERHEAD, fromChain: false }; }
 }
 
 export async function nextId(): Promise<bigint> {
