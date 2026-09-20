@@ -205,12 +205,9 @@ small, .label { font-size: 14px; color: var(--ink-2); }
 .receipt .legs ul { margin: 6px 0 0; padding-left: 18px; }
 .receipt .legs li { font-family: var(--mono); overflow-wrap: anywhere; margin: 4px 0; }
 .links { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 18px; }
+/* no generated-content arrows here: the accessible name of these links must be exactly their text */
 .links a { display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-align: center; padding: 10px 8px; border: 1px solid var(--rule); border-radius: var(--r-sm); background: var(--paper-3); font-size: 14px; font-weight: 500; text-decoration: none; min-height: 44px; transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast), box-shadow var(--t-fast); }
-.links a::after { content: "↗"; font-size: 12px; opacity: 0.7; transition: transform var(--t-normal); }
-.links a[href^="#"]::after { content: "→"; }
 .links a:hover { background: var(--paper-2); border-color: var(--copper); transform: translateY(-1px); box-shadow: var(--shadow-md); }
-.links a:hover::after { transform: translate(2px, -2px); }
-.links a[href^="#"]:hover::after { transform: translateX(3px); }
 .links a:active { transform: translateY(0); box-shadow: none; }
 @media (max-width: 600px) { .links { grid-template-columns: 1fr 1fr; } }
 
