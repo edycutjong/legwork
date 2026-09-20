@@ -15,11 +15,14 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
   try {
     [order, hd] = await Promise.all([getOrder(id), head()]);
   } catch (e) {
-    root.replaceChildren(notice('error', 'Could not read the order: ', errorText(e)));
+    const again = h('button', { class: 'btn quiet', type: 'button' }, 'Try again');
+    again.addEventListener('click', () => renderOrder(root, id, opts));
+    root.replaceChildren(notice('error', 'Could not read the order: ', errorText(e)), h('div', { class: 'actions' }, again, h('a', { href: '#/' }, '← all orders')));
     return;
   }
   if (order.payer === ZERO) {
     root.replaceChildren(
+      h('div', { class: 'card-head', style: 'margin-bottom:12px' }, h('h2', {}, opts.tx ? `Order #${id} — cancelled, receipt kept` : `Order #${id}`), h('span', { class: 'badge none' }, opts.tx ? 'CANCELLED' : 'NONE')),
       opts.tx
         ? notice('info', `Order #${id} has been cancelled since this run — the receipt below is read from the chain and stays there.`)
         : notice('error', `Order #${id} does not exist (or was cancelled).`),
@@ -58,7 +61,9 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
     const isPayer = wallet()?.address.toLowerCase() === order.payer.toLowerCase();
     const owed = st === 'Due' && order.interval > 0n ? (now - order.nextDue) / order.interval + 1n : 0n;
     const cd = h('div', { class: `countdown ${st === 'Due' ? 'due' : 'waiting'}`, 'aria-live': 'polite' }, st === 'Paused' ? 'paused' : st === 'Underfunded' ? 'underfunded' : countdown(secs));
-    const owedNote = owed > 1n ? h('p', { class: 'muted', style: 'font-size:13px;margin-top:-2px' }, `${owed} periods are owed — the schedule is anchored, so each execute pays one period and the next is due immediately until it has caught up.`) : '';
+    const dueAt = `${new Date(Number(order.nextDue) * 1000).toISOString().replace('T', ' ').slice(0, 16)} UTC`;
+    const covers = runsLeft(order, hd.basefee);
+    const owedNote = owed > 1n ? h('p', { class: 'muted', style: 'font-size:13px;margin-top:-2px' }, `Due since ${dueAt} — ${owed.toLocaleString('en-US')} periods have accrued and the schedule is anchored; the deposit covers ${covers} of them, so one wallet can run it ${covers === 1n ? 'once' : covers === 2n ? 'twice' : `${covers} times`} back-to-back, one period per execute.`) : '';
     const runBtn = h('button', { class: 'btn wide exec', type: 'button', disabled: st !== 'Due' }, st === 'Due' ? 'Execute — anyone can' : st === 'Waiting' ? 'Execute (not due yet)' : st === 'Paused' ? 'Paused' : 'Underfunded');
     const runNote = h('p', { class: 'muted', style: 'margin-top:10px;font-size:13px;min-height:1.5em' });
     const runStatus = h('div', { style: 'margin-top:12px' });
@@ -70,7 +75,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
       cd,
       owedNote,
       h('dl', { class: 'kv' },
-        h('dt', {}, 'next run due'), h('dd', {}, `${new Date(Number(order.nextDue) * 1000).toISOString().replace('T', ' ').slice(0, 19)} UTC`),
+        h('dt', {}, st === 'Due' ? 'due since' : 'next run due'), h('dd', {}, `${new Date(Number(order.nextDue) * 1000).toISOString().replace('T', ' ').slice(0, 19)} UTC`),
         h('dt', {}, 'deposit'), h('dd', {}, `${usdc18(order.deposit)} USDC`, h('small', { class: 'muted' }, ` · ${order.deposit} wei`)),
         h('dt', {}, 'runs left'), h('dd', {}, `${runsLeft(order, hd.basefee)} · one honest run needs ${usdc18(needed)} USDC`),
         h('dt', {}, 'refunded at ≤'), h('dd', {}, `${fmtGwei(cap)} · min(2 × base fee ${fmtGwei(hd.basefee)}, max ${fmtGwei(order.maxGasPrice)})`),
@@ -90,7 +95,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
           try { g = await estimateExecute(id, wallet()?.address); } catch { /* keep the estimate */ }
           runNote.textContent = `At the current base fee ${fmtGwei(hd.basefee)} the fee is priced above this order's ${fmtGwei(cap)} cap — you would eat ≈ ${usdc18((eff - cap) * g)} USDC of the fee (tip ${usdc18(order.tip)}).`;
         } else {
-          runNote.textContent = `The page sends priority 0 at max ${fmtGwei(mf)}; your refund is priced at min(that, ${fmtGwei(cap)}). Net ≈ the tip.`;
+          runNote.textContent = `The page sends priority 0 at max ${(Number(mf) / 1e9).toFixed(2)} Gwei; your refund is priced at min(that, ${fmtGwei(cap)}). Net ≈ the tip.`;
         }
       });
     }
@@ -235,15 +240,15 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
   const drawRuns = (runs: Run[]) => {
     if (runs.length === 0) { runsBody.replaceChildren(h('p', { class: 'muted' }, 'No runs in the scanned range.')); return; }
     runsBody.replaceChildren(h('div', { class: 'table-wrap' }, h('table', {},
-      h('thead', {}, h('tr', {}, h('th', {}, 'block'), h('th', {}, 'executor'), h('th', {}, 'metered'), h('th', {}, 'price'), h('th', {}, 'refund + tip'), h('th', {}, 'paid'), h('th', {}, 'tx'))),
+      h('thead', {}, h('tr', {}, h('th', {}, 'tx'), h('th', {}, 'block'), h('th', {}, 'executor'), h('th', {}, 'metered'), h('th', {}, 'price'), h('th', {}, 'refund + tip'), h('th', {}, 'paid'))),
       h('tbody', {}, ...runs.map((r) => h('tr', {},
+        h('td', {}, h('a', { href: `#/o/${id}/tx/${r.transactionHash}` }, short(r.transactionHash))),
         h('td', {}, String(r.blockNumber)),
         h('td', {}, addrLink(r.executor)),
         h('td', {}, String(r.gasMetered)),
         h('td', {}, fmtGwei(r.price)),
         h('td', {}, `${usdc18(r.refund + r.tip)}`),
         h('td', {}, r.paid ? h('span', { class: 'pos' }, 'yes') : h('span', { class: 'neg' }, `no · paused (${r.pausedReason ?? '?'})`)),
-        h('td', {}, h('a', { href: `#/o/${id}/tx/${r.transactionHash}` }, short(r.transactionHash))),
       ))))));
   };
 
@@ -270,7 +275,9 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
       older.disabled = scan.exhausted;
     } catch (e) {
       if (g !== gen) return;
-      runsBody.replaceChildren(notice('error', 'History scan failed: ', errorText(e)));
+      const again = h('button', { class: 'btn quiet', type: 'button' }, 'Try again');
+      again.addEventListener('click', () => { runsBody.replaceChildren(skTable(3, 'scanning again…')); loadRuns(true); });
+      runsBody.replaceChildren(notice('error', 'History scan failed: ', errorText(e)), h('div', { class: 'actions', style: 'margin:0 0 12px' }, again));
       older.disabled = false;
     }
   }

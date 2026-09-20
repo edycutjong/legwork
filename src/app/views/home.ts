@@ -55,7 +55,7 @@ export async function renderHome(root: HTMLElement) {
   root.append(
     h('section', { class: 'hero', 'aria-labelledby': 'claim' },
       h('div', { class: 'hero-copy' },
-        h('span', { class: 'eyebrow' }, h('span', { class: 'dot', 'aria-hidden': 'true' }), h('span', {}, 'Live on ', h('strong', {}, 'Arc mainnet'), ' · chain 5042', h('span', { class: 'hide-sm' }, ' · 107 receipts'))),
+        h('span', { class: 'eyebrow' }, h('span', { class: 'dot', 'aria-hidden': 'true' }), h('span', {}, 'Live on ', h('strong', {}, 'Arc mainnet'), ' · chain 5042', h('span', { class: 'hide-sm' }, ' · 107 committed receipts'))),
         h('h1', { id: 'claim' }, 'Standing USDC orders ', h('span', { class: 'cu' }, 'anyone can run'), ' — ', h('span', { class: 'thin' }, 'repaid the exact gas, in the same dollar, in the same transaction.')),
         h('p', { class: 'lede-lg' }, 'A payer funds a recurring payment with native USDC. When it is due, ', h('strong', {}, 'anyone'), ' calls ', h('code', {}, 'execute()'), ': the contract pays the payee, meters the gas the call consumed and pays the executor that gas plus the payer’s tip — from the same deposit, in the same transaction. On Arc the gas ', h('em', {}, 'is'), ' USDC, so the refund is arithmetic: ', h('strong', {}, 'no oracle, no keeper network, no server.')),
         h('div', { class: 'cta-row' },
@@ -133,14 +133,15 @@ export async function renderHome(root: HTMLElement) {
       h('div', { class: 'exec' },
         h('div', { class: 'card exec-stage' },
           h('div', { class: 'dg-scroll', html: EXEC_DIAGRAM }),
+          h('p', { class: 'swipe-hint' }, 'swipe → to see the whole call'),
           h('div', { class: 'mono-eq', 'aria-label': 'The receipt equalities' },
-            h('div', { class: 'eq b6' }, h('b', {}, 'refund = gasUsed × ', h('span', { class: 'cu' }, 'tx.gasprice')), '58,415 × 20 Gwei = 0.0011683 USDC'),
+            h('div', { class: 'eq b6' }, h('b', {}, 'refund = gasMetered × ', h('span', { class: 'cu' }, 'price')), '= gasUsed × effectiveGasPrice, to the wei · 58,415 × 20 Gwei = 0.0011683 USDC'),
             h('div', { class: 'eq b7' }, h('b', {}, 'drift ', h('span', { class: 'ok' }, '0'), ' gas'), 'gasUsed − gasMetered · 30 of 30 runs'),
             h('div', { class: 'eq b8' }, h('b', {}, 'refund ÷ fee ', h('span', { class: 'ok' }, '1.000000')), 'the executor’s net is exactly the tip'))),
         h('ol', { class: 'exec-steps', 'aria-label': 'execute(), line by line' },
           step('metered', 'g0 = gasleft()', 'first statement · the window opens'),
           step('metered', 'guard · load order · NoOrder / IsPaused / NotDue', 'a revert costs nobody who simulates first'),
-          step('metered', 'price = min(tx.gasprice, 2 × block.basefee, maxGasPrice)', 'Arc does not burn the base fee — the 2× cap bounds a proposer-executor'),
+          step('metered', 'price = min(tx.gasprice, 2 × block.basefee, maxGasPrice)', 'Arc does not burn the base fee — the 2× cap bounds a block producer who also executes'),
           step('metered', 'need = amount + tip + 120,000 × price → Underfunded', 'never a partial payment'),
           step('metered', 'nextDue += interval · deposit −= amount + tip', 'effects before interaction'),
           step('metered', 'payee.call{value: amount, gas: 30,000}', 'a refusal pauses the order · the executor is still repaid'),
@@ -179,7 +180,7 @@ export async function renderHome(root: HTMLElement) {
           h('div', { class: 'head' }, h('strong', {}, 'Receipt — paid'), h('span', {}, 'order #5 · block 21494016')),
           h('p', { class: 'lede' }, 'Executed by ', chip(HERO_EXECUTOR), ' · ', h('a', { href: explorerTx(HERO_TX), target: '_blank', rel: 'noopener' }, 'transaction 0x2f6a…0c95')),
           h('ul', { class: 'lines' },
-            line('', 'payee received', `Transfer ${short(CONTRACT)} → ${short(HERO_PAYEE)} from the system emitter`, '0.001 USDC', '1000000000000000'),
+            line('', 'payee received', `Transfer ${short(CONTRACT)} → ${short(HERO_PAYEE)} — the EIP-7708 Transfer log Arc's system contract emits for every native USDC move`, '0.001 USDC', '1000000000000000'),
             line('credit', 'executor refunded', 'Executed.refund = 58415 gas metered × 20 Gwei', '+0.0011683 USDC', '1168300000000000'),
             line('credit', 'executor tipped', 'Executed.tip', '+0.001 USDC', '1000000000000000'),
             line('debit', 'real fee paid', 'receipt.gasUsed 58415 × effectiveGasPrice 20 Gwei — from the receipt, not from us', '−0.0011683 USDC', '1168300000000000'),
@@ -204,7 +205,7 @@ export async function renderHome(root: HTMLElement) {
         stat('58,415', 'gasUsed p50 = p95 · ≈ 0.00117 USDC at 20 Gwei'),
         stat('1.000000', 'refund ÷ real fee on every row'),
         stat('42', 'Foundry cases · unit, fuzz × 512, invariants × 64 × 32'),
-        stat('36 + 20,000', 'vitest cases + fast-check generated cases'),
+        stat('36', 'vitest cases · 4 properties × 5,000 = 20,000 generated inputs'),
         stat('107', 'mainnet receipts committed · 0.1944 USDC of gas'))),
     h('section', { class: 'section', 'aria-labelledby': 'limits-h' },
       h('div', { class: 'limits-grid' },
@@ -217,7 +218,7 @@ export async function renderHome(root: HTMLElement) {
               h('li', {}, h('strong', {}, 'The drift bound holds for plain-account executors'), ' (≤ 50 gas, measured 0); a contract executor’s own code runs outside the metered window and pays for itself.'),
               h('li', {}, h('strong', {}, 'Explorer source verification was not attempted'), ' (its API sits behind a challenge page); the on-chain runtime bytecode is checked byte-for-byte against the build instead.'),
               h('li', {}, h('strong', {}, 'The contract’s status / needed / priceCap views read block.basefee'), ', which a bare eth_call sees as 0 on Arc’s RPC; this page computes the same arithmetic from the block’s baseFeePerGas and never uses them.')),
-            h('p', { class: 'muted', style: 'margin:14px 0 0;font-size:13.5px' }, 'All nine, with the corrections log: ', h('a', { href: `${REPO}#-engineering-rigor`, target: '_blank', rel: 'noopener' }, 'README · Engineering rigor'), '.'))),
+            h('p', { class: 'muted', style: 'margin:14px 0 0;font-size:13.5px' }, 'All nine, with the corrections log: ', h('a', { href: `${REPO}#honest-limits-9`, target: '_blank', rel: 'noopener' }, 'README · Honest limits (9)'), '.'))),
         h('div', {},
           h('div', { class: 'section-head' }, h('span', { class: 'kicker' }, 'For reviewers'), h('h2', {}, 'The 60-second path'), h('p', {}, 'No account, no cookies, no key. A wallet only if you want to press the button.')),
           h('div', { class: 'path' },
@@ -229,6 +230,8 @@ export async function renderHome(root: HTMLElement) {
 
   // ---------------------------------------------------------------- reads: the latest base fee, then the list
   try { hd = await head(); requote(); } catch { /* quoted at the documented minimum */ }
+  await loadList();
+  async function loadList() {
   try {
     const { total, rows: orders } = await listOrders();
     const now = BigInt(Math.floor(Date.now() / 1000));
@@ -255,6 +258,9 @@ export async function renderHome(root: HTMLElement) {
       h('p', { class: 'note muted' }, `Base fee now ${usdc18(hd.basefee * 10n ** 9n)} Gwei · one honest run of a 0.02 / tip 0.01 order needs ${usdc18(neededAt({ amount: parseUsdc('0.02'), tip: parseUsdc('0.01'), maxGasPrice: parseGwei('100') }, hd.basefee))} USDC · ${total} order${total === 1n ? '' : 's'} created on the contract so far.`),
     );
   } catch (e) {
-    wrap.replaceChildren(notice('error', 'Could not read the contract: ', errorText(e)));
+    const again = h('button', { class: 'btn quiet', type: 'button' }, 'Try again');
+    again.addEventListener('click', () => { wrap.replaceChildren(skTable(5, 'reading every order on the contract through Multicall3…')); loadList(); });
+    wrap.replaceChildren(notice('error', 'Could not read the contract: ', errorText(e)), h('div', { class: 'actions' }, again));
+  }
   }
 }

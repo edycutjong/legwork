@@ -47,7 +47,7 @@ body::before {
 }
 a { color: var(--copper); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; text-decoration-color: rgba(164, 71, 26, 0.45); transition: color var(--t-fast), text-decoration-color var(--t-fast); border-radius: 3px; }
 a:hover { color: var(--copper-2); text-decoration-color: currentColor; }
-a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--copper); outline-offset: 2px; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, pre:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--copper); outline-offset: 2px; }
 code, .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 code { font-size: 0.92em; background: var(--paper-3); padding: 1px 5px; border-radius: 4px; }
 pre code { background: none; padding: 0; font-size: inherit; }
@@ -128,6 +128,7 @@ small, .label { font-size: 14px; color: var(--ink-2); }
 .quote { border-top: 1px dotted var(--rule-2); border-bottom: 1px dotted var(--rule-2); padding: 12px 0; margin: 6px 0 16px; font-size: 14px; }
 .quote .row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .quote .row > span:first-child { color: var(--ink-2); }
+.quote .row .mono { white-space: nowrap; }
 .quote .row + .row { margin-top: 5px; }
 .quote .total { font-weight: 650; color: var(--ink); border-top: 1px solid var(--rule); margin-top: 8px; padding-top: 8px; font-size: 15px; }
 .quote .total > span:first-child { color: var(--ink); }
@@ -302,8 +303,10 @@ small, .label { font-size: 14px; color: var(--ink-2); }
 
 /* the living diagram of execute() */
 .exec { display: grid; gap: 24px; grid-template-columns: minmax(0, 1fr); }
-.dg-scroll { overflow-x: auto; }
-.dg-scroll svg { min-width: 720px; }
+.dg-scroll { position: relative; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.dg-scroll svg { min-width: 680px; }
+.swipe-hint { display: none; margin: 8px 0 0; font: 12px var(--mono); color: var(--ink-2); text-align: right; }
+@media (max-width: 720px) { .exec-stage { position: relative; } .exec-stage::after { content: ""; position: absolute; top: 18px; right: 18px; width: 56px; height: 300px; pointer-events: none; background: linear-gradient(90deg, rgba(255, 253, 248, 0), var(--paper-2)); } .swipe-hint { display: block; } }
 .exec-stage { padding: 18px 18px 14px; overflow: hidden; }
 .exec-stage svg { display: block; width: 100%; height: auto; }
 .exec-stage .mono-eq { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
@@ -323,8 +326,8 @@ small, .label { font-size: 14px; color: var(--ink-2); }
 .exec-steps li::before { content: counter(ln, decimal-leading-zero); font: 600 12px/1.6 var(--mono); color: var(--ink-3); padding-top: 2px; }
 .exec-steps li.metered { border-left: 3px solid var(--copper); }
 .exec-steps li.metered::before { color: var(--copper); }
-.exec-steps li code { white-space: nowrap; }
-.exec-steps .m { font: 11px/1.4 var(--mono); color: var(--copper); letter-spacing: 0.08em; text-transform: uppercase; display: block; margin-top: 2px; }
+.exec-steps li code { overflow-wrap: anywhere; }
+.exec-steps .m { font: 12px/1.45 var(--mono); color: var(--copper); letter-spacing: 0.08em; text-transform: uppercase; display: block; margin-top: 2px; }
 
 /* diagram animation — one master clock, transform/opacity only, base state = the resolved picture */
 .dg-press { transform-box: fill-box; transform-origin: center; animation: dgPress var(--story) cubic-bezier(0.2, 1.4, 0.4, 1) infinite; }
