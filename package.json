@@ -1,6 +1,6 @@
 {
   "name": "legwork",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "description": "Standing USDC orders on Arc that anyone can execute and be repaid the metered gas + tip from the order's deposit.",

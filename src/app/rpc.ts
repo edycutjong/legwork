@@ -14,19 +14,23 @@ export const DEPLOY = deploy;
 export const client = createPublicClient({ chain: arc, transport: http(RPC_URL, { batch: false }), ccipRead: false });
 
 /** The public RPC rate-limits bursts (HTTP 429 / -32005 / "exceeds defined limit"); a plain read is retried a few times, backing off. */
+export function isRateLimit(e: any): boolean {
+  const code = e?.code ?? e?.cause?.code, msg = String(e?.shortMessage ?? e?.message ?? '');
+  return code === -32005 || code === 429 || e?.status === 429 || /429|rate limit|exceeds defined limit/i.test(msg);
+}
 async function retried<T>(f: () => Promise<T>, tries = 4): Promise<T> {
   for (let i = 0; ; i++) {
     try { return await f(); } catch (e: any) {
-      const code = e?.code ?? e?.cause?.code, msg = String(e?.shortMessage ?? e?.message ?? '');
-      const limited = code === -32005 || code === 429 || e?.status === 429 || /429|rate limit|exceeds defined limit/i.test(msg);
-      if (!limited || i >= tries - 1) throw e;
+      if (!isRateLimit(e) || i >= tries - 1) throw e;
       await new Promise((r) => setTimeout(r, 800 * 2 ** i)); // 0.8 · 1.6 · 3.2 s
     }
   }
 }
 
-export async function chainOk(): Promise<boolean> {
-  try { return (await client.getChainId()) === 5042; } catch { return false; }
+/** Three outcomes: the chain answered 5042, it answered something else / is unreachable, or the public RPC only refused the
+ *  burst (HTTP 429 — this check fires beside the first view's reads). A refused burst is not an outage and is not reported as one. */
+export async function chainOk(): Promise<'ok' | 'down' | 'rate-limited'> {
+  try { return (await retried(() => client.getChainId())) === 5042 ? 'ok' : 'down'; } catch (e) { return isRateLimit(e) ? 'rate-limited' : 'down'; }
 }
 
 export async function head() {
