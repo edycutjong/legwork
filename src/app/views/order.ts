@@ -4,13 +4,13 @@ import { foldEvents, neededAt, orderStatus, priceCapAt, runsLeft, usdc18, type O
 import { decodeReceipt, type Decoded } from '../../lib/receipt';
 import { coverage, type ScanState } from '../../lib/scan';
 import { CONTRACT, estimateExecute, getOrder, head, receipt as getReceipt, scanHistory, startScan, waitReceipt } from '../rpc';
-import { addrLink, badge, chip, countdown, errorText, fmtGwei, h, notice, short, spinner, txLink } from '../ui';
+import { addrLink, badge, chip, countdown, errorText, fmtGwei, h, notice, short, skCard, skTable, spinner, txLink } from '../ui';
 import { connect, maxFeeThePageWillSend, onWallet, sendCancel, sendExecute, sendResume, sendTopUp, wallet } from '../wallet';
 
 const ZERO = '0x0000000000000000000000000000000000000000';
 
 export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0x${string}` } = {}) {
-  root.replaceChildren(h('p', {}, spinner(), ` reading order #${id}…`));
+  root.replaceChildren(h('div', { class: 'two-col' }, skCard(`reading order #${id} from the contract…`), h('div', { class: 'card' }, skTable(3, 'reading its runs…'))));
   let order: Order, hd: { number: bigint; timestamp: bigint; basefee: bigint };
   try {
     [order, hd] = await Promise.all([getOrder(id), head()]);
@@ -40,7 +40,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
   root.replaceChildren(h('div', { class: 'two-col' }, left, right));
 
   // ---------------------------------------------------------------- card
-  const card = h('div', { class: 'card' });
+  const card = h('div', { class: 'card order-card' });
   left.append(card);
   let timer: number | undefined;
   let offWallet = () => {};
@@ -58,14 +58,14 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
     const isPayer = wallet()?.address.toLowerCase() === order.payer.toLowerCase();
     const owed = st === 'Due' && order.interval > 0n ? (now - order.nextDue) / order.interval + 1n : 0n;
     const cd = h('div', { class: `countdown ${st === 'Due' ? 'due' : 'waiting'}`, 'aria-live': 'polite' }, st === 'Paused' ? 'paused' : st === 'Underfunded' ? 'underfunded' : countdown(secs));
-    const owedNote = owed > 1n ? h('p', { class: 'muted', style: 'font-size:13px;margin-top:-4px' }, `${owed} periods are owed — the schedule is anchored, so each execute pays one period and the next is due immediately until it has caught up.`) : '';
-    const runBtn = h('button', { class: 'btn wide', type: 'button', disabled: st !== 'Due' }, st === 'Due' ? 'Execute — anyone can' : st === 'Waiting' ? 'Execute (not due yet)' : st === 'Paused' ? 'Paused' : 'Underfunded');
-    const runNote = h('p', { class: 'muted', style: 'margin-top:8px;font-size:13px' });
-    const runStatus = h('div');
+    const owedNote = owed > 1n ? h('p', { class: 'muted', style: 'font-size:13px;margin-top:-2px' }, `${owed} periods are owed — the schedule is anchored, so each execute pays one period and the next is due immediately until it has caught up.`) : '';
+    const runBtn = h('button', { class: 'btn wide exec', type: 'button', disabled: st !== 'Due' }, st === 'Due' ? 'Execute — anyone can' : st === 'Waiting' ? 'Execute (not due yet)' : st === 'Paused' ? 'Paused' : 'Underfunded');
+    const runNote = h('p', { class: 'muted', style: 'margin-top:10px;font-size:13px;min-height:1.5em' });
+    const runStatus = h('div', { style: 'margin-top:12px' });
     runBtn.addEventListener('click', () => execute(runBtn, runStatus));
 
     card.replaceChildren(
-      h('div', { style: 'display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap' }, h('h2', {}, `Order #${id}`), badge(st)),
+      h('div', { class: 'card-head' }, h('h2', {}, `Order #${id}`), badge(st)),
       h('p', { class: 'lede' }, `${usdc18(order.amount)} USDC to `, chip(order.payee), ` every ${order.interval} s · tip ${usdc18(order.tip)} USDC to whoever runs it`),
       cd,
       owedNote,
@@ -98,7 +98,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
 
   const payerControls = (st: string) => {
     const topUpAmt = h('input', { type: 'text', 'aria-label': 'Top-up amount (USDC)', value: usdc18(neededAt(order, hd.basefee)), inputmode: 'decimal', style: 'max-width:160px' });
-    const msg = h('div');
+    const msg = h('div', { style: 'margin-top:12px' });
     const topUp = h('button', { class: 'btn quiet', type: 'button' }, 'Top up');
     const resume = h('button', { class: 'btn quiet', type: 'button', disabled: st !== 'Paused' }, 'Resume');
     const cancel = h('button', { class: 'btn danger', type: 'button' }, 'Cancel & withdraw');
@@ -192,7 +192,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
     }
     const net = x.executorNet!;
     box.append(
-      h('h2', {}, e.paid ? 'Receipt — paid' : 'Receipt — payee refused, order paused'),
+      h('div', { class: 'card-head' }, h('h2', {}, e.paid ? 'Receipt — paid' : 'Receipt — payee refused, order paused'), h('span', { class: `badge ${e.paid ? 'due' : 'paused'}` }, e.paid ? 'PAID' : 'PAUSED')),
       h('p', { class: 'lede' }, 'Executed by ', chip(x.executor), ` in block ${x.blockNumber}. `, txLink(x.hash, 'transaction ' + short(x.hash))),
       h('ul', { class: 'lines' },
         e.paid
@@ -223,10 +223,10 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
   }
 
   // ---------------------------------------------------------------- runs (bounded two-ended scan)
-  const runsCard = h('div', { class: 'card runs' }, h('h2', {}, 'Recent runs'));
-  const runsBody = h('div', {}, h('p', {}, spinner(), ' scanning 8 × 9,000 blocks — the newest and the oldest…'));
+  const runsCard = h('div', { class: 'card runs' }, h('div', { class: 'card-head' }, h('h2', {}, 'Recent runs'), h('span', { class: 'muted', style: 'font-size:13px' }, 'Executed · Paused logs, newest first')));
+  const runsBody = h('div', {}, skTable(3, 'scanning 8 × 9,000 blocks — the newest and the oldest…'));
   const older = h('button', { class: 'btn quiet', type: 'button' }, 'Runs in between');
-  const scanNote = h('p', { class: 'muted', style: 'font-size:13px' });
+  const scanNote = h('p', { class: 'note muted' });
   runsCard.append(runsBody, h('div', { class: 'actions' }, older), scanNote);
   right.append(runsCard);
   let scan: ScanState | undefined;

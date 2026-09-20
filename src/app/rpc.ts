@@ -13,17 +13,29 @@ export const DEPLOY = deploy;
 // ccipRead off: the page must never fetch anything but the RPC (an OffchainLookup revert would otherwise call out)
 export const client = createPublicClient({ chain: arc, transport: http(RPC_URL, { batch: false }), ccipRead: false });
 
+/** The public RPC rate-limits bursts (HTTP 429 / -32005 / "exceeds defined limit"); a plain read is retried a few times, backing off. */
+async function retried<T>(f: () => Promise<T>, tries = 3): Promise<T> {
+  for (let i = 0; ; i++) {
+    try { return await f(); } catch (e: any) {
+      const code = e?.code ?? e?.cause?.code, msg = String(e?.shortMessage ?? e?.message ?? '');
+      const limited = code === -32005 || code === 429 || e?.status === 429 || /429|rate limit|exceeds defined limit/i.test(msg);
+      if (!limited || i >= tries - 1) throw e;
+      await new Promise((r) => setTimeout(r, 700 * (i + 1)));
+    }
+  }
+}
+
 export async function chainOk(): Promise<boolean> {
   try { return (await client.getChainId()) === 5042; } catch { return false; }
 }
 
 export async function head() {
-  const b = await client.getBlock({ blockTag: 'latest' });
+  const b = await retried(() => client.getBlock({ blockTag: 'latest' }));
   return { number: b.number, timestamp: b.timestamp, basefee: b.baseFeePerGas ?? 20_000_000_000n };
 }
 
 export async function getOrder(id: bigint): Promise<Order> {
-  const t = await client.readContract({ address: CONTRACT, abi: legworkAbi, functionName: 'orders', args: [id] });
+  const t = await retried(() => client.readContract({ address: CONTRACT, abi: legworkAbi, functionName: 'orders', args: [id] }));
   return decodeOrder(t as any);
 }
 
@@ -37,7 +49,7 @@ export async function overheadOnChain(): Promise<number> {
 }
 
 export async function nextId(): Promise<bigint> {
-  return client.readContract({ address: CONTRACT, abi: legworkAbi, functionName: 'nextId' });
+  return retried(() => client.readContract({ address: CONTRACT, abi: legworkAbi, functionName: 'nextId' }));
 }
 
 export const LIST_PAGE = 200;
@@ -50,10 +62,10 @@ export async function listOrders(): Promise<{ total: bigint; rows: { id: bigint;
   if (n === 0n) return { total: 0n, rows: [] };
   let tuples: any[];
   try {
-    const res = await client.multicall({
+    const res = await retried(() => client.multicall({
       contracts: ids.map((id) => ({ address: CONTRACT, abi: legworkAbi, functionName: 'orders' as const, args: [id] as const })),
       allowFailure: false,
-    });
+    }));
     tuples = res as any[];
   } catch {
     tuples = [];
@@ -70,18 +82,20 @@ const PAUSED_TOPIC = toEventSelector(pausedEvent);
 /**
  * One raw eth_getLogs per window: topics [[Executed, Paused], id] — both event kinds for one order in one request.
  * The public RPC is load-balanced: a backend can lag the head it just reported (-32014 "requested data not
- * available") or rate-limit a burst (-32005). Both are retried once after a short pause, sequentially.
+ * available") or rate-limit a burst (-32005). Both are retried twice, backing off, sequentially.
  */
 async function orderLogs(id: bigint, fromBlock: bigint, toBlock: bigint): Promise<OrderEvent[]> {
   const params = [{ address: CONTRACT, fromBlock: numberToHex(fromBlock), toBlock: numberToHex(toBlock), topics: [[EXECUTED_TOPIC, PAUSED_TOPIC], numberToHex(id, { size: 32 })] }];
-  let raw: any[];
-  try {
-    raw = (await client.request({ method: 'eth_getLogs', params } as any)) as any[];
-  } catch (e: any) {
-    const code = e?.code ?? e?.cause?.code;
-    if (code !== -32014 && code !== -32005) throw e;
-    await new Promise((r) => setTimeout(r, 900));
-    raw = (await client.request({ method: 'eth_getLogs', params } as any)) as any[];
+  let raw: any[] = [];
+  for (let attempt = 0; ; attempt++) {
+    try {
+      raw = (await client.request({ method: 'eth_getLogs', params } as any)) as any[];
+      break;
+    } catch (e: any) {
+      const code = e?.code ?? e?.cause?.code;
+      if ((code !== -32014 && code !== -32005) || attempt >= 2) throw e;
+      await new Promise((r) => setTimeout(r, 900 * (attempt + 1)));
+    }
   }
   const out: OrderEvent[] = [];
   for (const l of raw) {
@@ -105,7 +119,7 @@ export async function scanHistory(id: bigint, state: ScanState, stale: () => boo
 export const startScan = (headNumber: bigint, createdBlock: bigint) => initialScan(headNumber, createdBlock);
 
 export async function receipt(hash: `0x${string}`) {
-  return client.getTransactionReceipt({ hash });
+  return retried(() => client.getTransactionReceipt({ hash }));
 }
 
 export async function waitReceipt(hash: `0x${string}`) {

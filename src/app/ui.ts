@@ -1,4 +1,4 @@
-/** Tiny DOM helpers. No framework — the page is two views and a receipt. */
+/** Tiny DOM helpers. No framework — the page is a landing, an order sheet and a receipt. */
 import { explorerAddress, explorerTx } from '../lib/chain';
 import { gwei, usdc18, type OrderStatus } from '../lib/orders';
 
@@ -21,9 +21,15 @@ export function h<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Record<s
 export const short = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 
 export function chip(address: string, label?: string) {
-  const el = h('button', { class: 'chip', type: 'button', title: `${address} — click to copy` }, label ?? short(address));
-  el.addEventListener('click', async () => {
-    try { await navigator.clipboard.writeText(address); el.textContent = 'copied'; setTimeout(() => (el.textContent = label ?? short(address)), 900); } catch { /* clipboard blocked */ }
+  const el = h('button', { class: 'chip', type: 'button', title: `${address} — click to copy`, 'aria-label': `${label ?? short(address)} — copy the full address` }, label ?? short(address));
+  el.addEventListener('click', async (ev) => {
+    ev.stopPropagation(); // a chip inside a clickable table row copies; it does not navigate
+    try {
+      await navigator.clipboard.writeText(address);
+      el.textContent = 'copied';
+      el.classList.add('copied');
+      setTimeout(() => { el.textContent = label ?? short(address); el.classList.remove('copied'); }, 900);
+    } catch { /* clipboard blocked */ }
   });
   return el;
 }
@@ -43,7 +49,7 @@ export const txLink = (hash: string, text = short(hash)) => h('a', { href: explo
 export const addrLink = (a: string, text = short(a)) => h('a', { href: explorerAddress(a), target: '_blank', rel: 'noopener' }, text);
 
 export function notice(kind: 'info' | 'error' | 'ok', ...content: (Node | string)[]) {
-  return h('div', { class: `notice ${kind === 'info' ? '' : kind}`, role: kind === 'error' ? 'alert' : 'status' }, ...content);
+  return h('div', { class: `notice ${kind === 'info' ? '' : kind}`, role: kind === 'error' ? 'alert' : 'status' }, h('span', {}, ...content));
 }
 
 export function countdown(secondsLeft: number): string {
@@ -54,7 +60,23 @@ export function countdown(secondsLeft: number): string {
   return d > 0 ? `${d}d ${p(hh)}:${p(mm)}:${p(ss)}` : `${p(hh)}:${p(mm)}:${p(ss)}`;
 }
 
+/** A spinner for the wallet flow (the wait is the signer's, not the page's). */
 export const spinner = () => h('span', { class: 'spinner', 'aria-hidden': 'true' });
+
+/** Skeletons for RPC reads: they reserve the space the loaded content will take, so nothing below them moves. */
+export const skeleton = (cls = '') => h('span', { class: `skeleton ${cls}`.trim(), 'aria-hidden': 'true' }, ' ');
+export function skTable(rows: number, caption: string) {
+  return h('div', {},
+    h('p', { class: 'sk-status' }, caption),
+    h('div', { class: 'sk-table', 'aria-hidden': 'true' },
+      h('div', { class: 'sk-head' }),
+      ...Array.from({ length: rows }, () => h('div', { class: 'sk-row' }, skeleton(), skeleton('tall'), skeleton(), skeleton(), skeleton('tall'), skeleton(), skeleton()))));
+}
+export function skCard(caption: string) {
+  return h('div', { class: 'card sk-card' },
+    h('p', { class: 'sk-status' }, caption),
+    h('div', { class: 'sk-lines', 'aria-hidden': 'true' }, skeleton('w40'), skeleton('w80'), skeleton('big'), skeleton('w60'), skeleton('w80'), skeleton('w60'), skeleton('w40'), skeleton('w80'), skeleton('big')));
+}
 
 export function errorText(e: any): string {
   const m: string = e?.shortMessage || e?.message || String(e);

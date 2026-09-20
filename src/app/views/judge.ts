@@ -18,9 +18,9 @@ export function renderJudge(root: HTMLElement) {
   const step = (...c: (Node | string)[]) => h('li', {}, ...c);
   root.replaceChildren(
     h('div', { class: 'card judge' },
-      h('h2', {}, 'For reviewers'),
-      h('p', { class: 'lede', style: 'font-size:18px;color:var(--ink)' }, CLAIM),
-      h('p', { class: 'muted' }, 'Arc mainnet, chain 5042. No backend, no oracle, no keeper network, nothing mocked: every number on this site is read from the chain in your browser.'),
+      h('div', { class: 'card-head' }, h('h2', {}, 'For reviewers'), h('span', { class: 'badge due' }, 'ARC MAINNET · 5042')),
+      h('p', { class: 'claim' }, CLAIM),
+      h('p', { class: 'muted' }, 'No backend, no oracle, no keeper network, nothing mocked: every number on this site is read from the chain in your browser. No account, no cookies, no key.'),
 
       h('h3', {}, 'The 60-second path'),
       h('ol', { class: 'steps' },
