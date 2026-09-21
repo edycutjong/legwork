@@ -71,3 +71,7 @@ chainOk().then((state) => {
   if (state === 'down') rpcNotice.replaceChildren(notice('error', 'The Arc RPC (https://rpc.mainnet.arc.io) is unreachable or is not chain 5042. The page reads everything from it and has no fallback.'));
   else if (state === 'rate-limited') rpcNotice.replaceChildren(notice('info', 'The public Arc RPC rate-limited the page\u2019s first reads (it answers HTTP 429 in bursts). Nothing is wrong on-chain \u2014 reload in a few seconds.'));
 });
+
+// Offline fallback only (public/sw.js): navigations still go to the network every time; the worker answers with
+// public/offline.html only when that fetch throws, so an online visitor never sees a cached shell or stale chain state.
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
