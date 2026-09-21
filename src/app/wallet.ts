@@ -47,6 +47,13 @@ export async function connect(): Promise<Wallet> {
 }
 
 /** Switch the wallet to Arc (5042), offering `wallet_addEthereumChain` if it is missing. */
+/** Forget the wallet on this page and, where the wallet supports it (EIP-2255 `wallet_revokePermissions`), drop the site's
+ *  account permission so the next connect asks again. The page never auto-connects, so a reload also starts signed out. */
+export async function disconnect(): Promise<void> {
+  set(undefined);
+  try { await injected()?.request({ method: 'wallet_revokePermissions', params: [{ eth_accounts: {} }] }); } catch { /* not every wallet implements it; the page state is already cleared */ }
+}
+
 export async function ensureArc(p = injected()) {
   if (!p) throw new Error('no injected provider');
   const id = (await p.request({ method: 'eth_chainId' })) as string;

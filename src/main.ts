@@ -5,7 +5,7 @@ import { renderHome } from './app/views/home';
 import { renderOrder } from './app/views/order';
 import { renderJudge } from './app/views/judge';
 import { h, notice, short } from './app/ui';
-import { connect, injected, onWallet } from './app/wallet';
+import { connect, disconnect, injected, onWallet } from './app/wallet';
 
 const app = document.getElementById('app')!;
 const walletSlot = h('span');
@@ -40,7 +40,7 @@ app.append(
 onWallet((w) => {
   walletSlot.replaceChildren(
     w
-      ? h('span', { class: 'wallet-pill on', title: w.address }, h('span', { class: 'mono' }, short(w.address)))
+      ? h('span', { class: 'wallet-pill on', title: w.address }, h('span', { class: 'mono' }, short(w.address)), h('button', { type: 'button', class: 'disconnect', 'aria-label': 'Disconnect wallet', title: 'Disconnect wallet', onClick: () => disconnect() }, 'disconnect'))
       : h('span', { class: 'wallet-pill' }, injected() ? h('button', { type: 'button', onClick: () => connect().catch((e) => alert(e.message)) }, 'connect wallet') : h('span', { class: 'muted' }, 'reading only — no wallet found')),
   );
 });

@@ -88,6 +88,8 @@ small, .label { font-size: 14px; color: var(--ink-2); }
 .wallet-pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--rule-2); flex: none; }
 .wallet-pill.on::before { background: var(--repaid); box-shadow: 0 0 0 3px var(--repaid-soft); }
 .wallet-pill button { border: 0; background: none; color: var(--copper); cursor: pointer; padding: 8px 0; font-weight: 600; min-height: 38px; transition: color var(--t-fast), transform var(--t-fast); }
+.wallet-pill button.disconnect { color: var(--ink-3); font-weight: 500; font-size: 12px; padding-left: 6px; border-left: 1px solid var(--rule); margin-left: 2px; }
+.wallet-pill button.disconnect:hover { color: var(--copper); }
 .wallet-pill button:hover { color: var(--copper-2); text-decoration: underline; text-underline-offset: 3px; }
 .wallet-pill button:active { transform: translateY(1px); }
 
