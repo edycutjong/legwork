@@ -344,6 +344,19 @@ modifier is where the two would meet.
 - [ ] Extract `Refunding` / `repaysExecutor` as an abstract contract with its own calibration script
 - [ ] A third-party executor (bot or agent) running the seeded orders for the tip
 
+### 🎯 What a microgrant would fund
+The proof is done: 30/30 runs with drift 0, the metering block calibrated on mainnet, every number reproducible from receipts.
+The next 6–8 weeks are about making the mechanism *reusable* and *run by someone else* — the two things a first proof cannot show.
+
+| # | milestone | what it proves | how it's measured |
+|---|---|---|---|
+| 1 | **Extract `Refunding` / `repaysExecutor`** as an abstract contract with its own calibration script (`OVERHEAD` re-derived per contract, not hard-coded) | the thirty-line metering block ports to any Arc contract, not just this one | a second contract (a DCA pull or a payroll release) wrapped in the modifier; its own 30-run bench with drift 0 |
+| 2 | **A third-party executor** — an open-source bot that watches `Created` / `nextDue` and calls `execute()` for the tip, run by someone who is not the payer | "anyone can run it" becomes a stranger actually running it | executor address ≠ payer/payee on ≥ 20 receipts; the executor's net after tip per `proof/rows.csv` |
+| 3 | **Refund ceiling under fee spikes** — `REFUND_CEIL_GAS` and the 2 × base-fee cap tested against a simulated fee spike on a fork, then one real spike if mainnet offers one | the payer's deposit cannot be drained by an executor choosing a bad moment | ratio (refund ÷ real fee) stays ≤ 1.0 in the fork test; a `proof/` row per scenario |
+| 4 | **One question for Arc office hours**: `tx.gasprice == effectiveGasPrice` is what makes the refund exact (`docs/FRICTION-LOG.md`) — is that guaranteed by the stable-fee design or an artefact of today's sequencer? | the identity every receipt depends on is confirmed as a commitment or the modifier grows a guard | a written answer linked from this README |
+
+Not on the list, on purpose: a keeper network, a token, an oracle. The point of the project is that Arc makes them unnecessary.
+
 ---
 
 ## 📄 License
