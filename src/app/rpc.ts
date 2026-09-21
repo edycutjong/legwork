@@ -1,7 +1,7 @@
 /** Read side: anonymous JSON-RPC only. Nothing here needs a wallet. */
-import { createPublicClient, decodeEventLog, http, numberToHex, parseAbiItem, toEventSelector } from 'viem';
+import { createPublicClient, decodeEventLog, fallback, http, numberToHex, parseAbiItem, toEventSelector } from 'viem';
 import { legworkAbi } from '../lib/abi';
-import { arc, RPC_URL } from '../lib/chain';
+import { arc, RPC_URLS } from '../lib/chain';
 import { decodeOrder, isOpen, type Order, type OrderEvent } from '../lib/orders';
 import { scanBounded, initialScan, type ScanState, CHUNKS_ON_OPEN } from '../lib/scan';
 import deploy from '../../deploy/arc-mainnet.json';
@@ -10,8 +10,10 @@ export const CONTRACT = deploy.contract.address as `0x${string}`;
 export const OVERHEAD = deploy.contract.overhead;
 export const DEPLOY = deploy;
 
-// ccipRead off: the page must never fetch anything but the RPC (an OffchainLookup revert would otherwise call out)
-export const client = createPublicClient({ chain: arc, transport: http(RPC_URL, { batch: false }), ccipRead: false });
+// ccipRead off: the page must never fetch anything but the RPC (an OffchainLookup revert would otherwise call out).
+// fallback: a request the primary refuses (429, a blocked host, an outage) is re-sent to the next documented public endpoint;
+// viem only gives up when every endpoint has failed, and only rejections/reverts short-circuit that walk.
+export const client = createPublicClient({ chain: arc, transport: fallback(RPC_URLS.map((u) => http(u, { batch: false }))), ccipRead: false });
 
 /** The public RPC rate-limits bursts (HTTP 429 / -32005 / "exceeds defined limit"); a plain read is retried a few times, backing off. */
 export function isRateLimit(e: any): boolean {
@@ -27,10 +29,18 @@ async function retried<T>(f: () => Promise<T>, tries = 4): Promise<T> {
   }
 }
 
-/** Three outcomes: the chain answered 5042, it answered something else / is unreachable, or the public RPC only refused the
- *  burst (HTTP 429 — this check fires beside the first view's reads). A refused burst is not an outage and is not reported as one. */
-export async function chainOk(): Promise<'ok' | 'down' | 'rate-limited'> {
-  try { return (await retried(() => client.getChainId())) === 5042 ? 'ok' : 'down'; } catch (e) { return isRateLimit(e) ? 'rate-limited' : 'down'; }
+/** Three outcomes: the chain answered 5042, it answered something else / no endpoint is reachable, or every endpoint only refused
+ *  the burst (HTTP 429 — this check fires beside the first view's reads). A refused burst is not an outage and is not reported as
+ *  one. `detail` is the underlying error, so a notice can say what actually failed from this browser instead of guessing. */
+export async function chainOk(): Promise<{ state: 'ok' | 'down' | 'rate-limited'; detail: string }> {
+  try {
+    const id = await retried(() => client.getChainId());
+    return id === 5042 ? { state: 'ok', detail: '' } : { state: 'down', detail: `the endpoint answered chain id ${id}, not 5042` };
+  } catch (e: any) {
+    const detail = String(e?.shortMessage ?? e?.message ?? e).split('\n')[0].slice(0, 160).replace(/\.$/, '');
+    console.warn('[legwork] RPC check failed:', e);
+    return { state: isRateLimit(e) ? 'rate-limited' : 'down', detail };
+  }
 }
 
 export async function head() {

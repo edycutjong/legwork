@@ -14,6 +14,9 @@ export const arc = defineChain({
 });
 
 export const RPC_URL = 'https://rpc.mainnet.arc.io';
+/** Every public Arc mainnet endpoint on docs.arc.io/arc/references/rpc-endpoints, primary first. All four answer chain 5042
+ *  with CORS for this origin (probed 2026-09-21); the page reads through them in this order, moving on when one refuses. */
+export const RPC_URLS = [RPC_URL, 'https://rpc.drpc.mainnet.arc.io', 'https://rpc.quicknode.mainnet.arc.io', 'https://rpc.blockdaemon.mainnet.arc.io'] as const;
 export const EXPLORER = 'https://explorer.arc.io';
 export const CHAIN_ID_HEX = '0x13b2';
 

@@ -67,9 +67,9 @@ window.addEventListener('hashchange', () => { window.scrollTo({ top: 0 }); route
 // The first view renders before any RPC round-trip (no empty frame, no shift when it fills); the chain check runs beside it.
 route();
 overheadRead().then(({ value, fromChain }) => (overheadSlot.textContent = fromChain ? `OVERHEAD() ${value} gas (read from the contract) · REFUND_CEIL_GAS 120,000 · payee stipend 30,000` : `OVERHEAD ${value} gas (deploy record — the contract read was rate-limited) · REFUND_CEIL_GAS 120,000 · payee stipend 30,000`));
-chainOk().then((state) => {
-  if (state === 'down') rpcNotice.replaceChildren(notice('error', 'The Arc RPC (https://rpc.mainnet.arc.io) is unreachable or is not chain 5042. The page reads everything from it and has no fallback.'));
-  else if (state === 'rate-limited') rpcNotice.replaceChildren(notice('info', 'The public Arc RPC rate-limited the page\u2019s first reads (it answers HTTP 429 in bursts). Nothing is wrong on-chain \u2014 reload in a few seconds.'));
+chainOk().then(({ state, detail }) => {
+  if (state === 'down') rpcNotice.replaceChildren(notice('error', 'This browser could not read Arc mainnet from any of its public RPC endpoints (rpc.mainnet.arc.io, then the dRPC, QuickNode and Blockdaemon mirrors): ', h('span', { class: 'mono' }, detail), '. The page reads everything from the chain, so check for an extension, VPN or network rule that blocks *.arc.io, then reload.'));
+  else if (state === 'rate-limited') rpcNotice.replaceChildren(notice('info', 'The public Arc RPC endpoints rate-limited the page\u2019s first reads (they answer HTTP 429 in bursts). Nothing is wrong on-chain \u2014 reload in a few seconds.'));
 });
 
 // Offline fallback only (public/sw.js): navigations still go to the network every time; the worker answers with
