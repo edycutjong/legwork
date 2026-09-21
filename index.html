@@ -6,25 +6,64 @@
     <title>Legwork — standing USDC orders on Arc</title>
     <meta name="description" content="Recurring USDC payments on Arc that anyone can execute and be repaid the metered gas plus the payer's tip in the same transaction. No oracle, no keeper." />
     <meta name="author" content="Edy Cu" />
+    <link rel="preconnect" href="https://rpc.mainnet.arc.io" crossorigin />
+    <!-- A deep link (#/judge, #/o/…) must not flash the home hero while the bundle loads. -->
+    <script>if (location.hash && location.hash !== '#/') document.documentElement.setAttribute('data-route', 'deep');</script>
+    <style>[data-route="deep"] [data-static] { display: none; }</style>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
     <link rel="canonical" href="https://legwork.edycu.dev/" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Legwork" />
-    <meta property="og:title" content="Legwork — standing USDC orders anyone can run, repaid the exact gas" />
+    <meta property="og:title" content="Legwork — USDC orders anyone can run, repaid the exact gas" />
     <meta property="og:description" content="Standing USDC orders on Arc: anyone can run one and is repaid the exact gas plus a tip in the same tx. No oracle, no keeper." />
     <meta property="og:url" content="https://legwork.edycu.dev/" />
-    <meta property="og:image" content="https://legwork.edycu.dev/og-image.png?v=3" />
+    <meta property="og:image" content="https://legwork.edycu.dev/og-image.png?v=4" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Legwork — the receipt of order #5: payee 0.001 USDC, executor refunded 0.0011683 = 58,415 gas × 20 Gwei, drift 0" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:creator" content="@edycutjong" />
-    <meta name="twitter:title" content="Legwork — standing USDC orders anyone can run, repaid the exact gas" />
-    <meta name="twitter:description" content="On Arc the gas and the payment are the same dollar, so the refund is arithmetic. 30/30 mainnet runs, drift 0, refund ÷ fee 1.000000." />
-    <meta name="twitter:image" content="https://legwork.edycu.dev/og-image.png?v=3" />
+    <meta name="twitter:title" content="Legwork — USDC orders anyone can run, repaid the exact gas" />
+    <meta name="twitter:description" content="On Arc the gas and the payment are the same dollar, so the refund is arithmetic. 30/30 mainnet runs, drift 0, ratio 1.000000." />
+    <meta name="twitter:image" content="https://legwork.edycu.dev/og-image.png?v=4" />
   </head>
   <body>
-    <div id="app"></div>
+    <!-- The shell is static so the first paint does not wait for the bundle (the page is otherwise fully JS-rendered).
+         src/main.ts adopts these nodes: it re-sets the deploy-derived href/text from deploy/arc-mainnet.json, mounts the
+         wallet pill, the RPC notice, the release tag and OVERHEAD, and renders the route into <main>. -->
+    <div id="app">
+      <a class="skip" href="#/">Skip to content</a>
+      <div class="sheet">
+        <header class="masthead">
+          <a class="brand" href="#/"><img src="./favicon.svg" alt="" width="30" height="30" /><strong>Legwork</strong><span class="muted">standing USDC orders on Arc</span></a>
+          <nav aria-label="Primary">
+            <a href="#/">orders</a>
+            <a data-nav="live" href="#/o/1">try the live order</a>
+            <a data-nav="contract" href="https://explorer.arc.io/address/0x8E2F8AFC29e9dc127103CD6AD5BCfBe661141ccb" target="_blank" rel="noopener">contract 0x8E2F…1ccb</a>
+            <a href="#/judge">for reviewers</a>
+            <a href="./deck.html" target="_blank" rel="noopener" title="Pitch deck — 12 slides, arrow keys to navigate">pitch deck ↗</a>
+          </nav>
+        </header>
+        <div id="rpc-notice"></div>
+        <main id="main" tabindex="-1">
+          <!-- The home hero, verbatim from src/app/views/home.ts (the smoke test checks the two stay identical), so the largest
+               text on the page is painted with the shell. renderHome() replaces it with the live view; a deep link hides it
+               (see the inline script in <head>) instead of flashing the wrong route. -->
+          <section class="hero" aria-labelledby="claim" data-static>
+            <div class="hero-copy">
+              <span class="eyebrow"><span class="dot" aria-hidden="true"></span><span>Live on <strong>Arc mainnet</strong> · chain 5042<span class="hide-sm"> · 107 committed receipts</span></span></span>
+              <h1 id="claim">Standing USDC orders <span class="cu">anyone can run</span> — <span class="thin">repaid the exact gas, in the same dollar, in the same transaction.</span></h1>
+              <p class="lede-lg">A payer funds a recurring payment with native USDC. When it is due, <strong>anyone</strong> calls <code>execute()</code>: the contract pays the payee, meters the gas the call consumed and pays the executor that gas plus the payer’s tip — from the same deposit, in the same transaction. On Arc the gas <em>is</em> USDC, so the refund is arithmetic: <strong>no oracle, no keeper network, no server.</strong></p>
+            </div>
+          </section>
+        </main>
+        <footer class="foot">
+          <span>Arc mainnet · chain 5042 · contract <a data-foot="contract" href="https://explorer.arc.io/address/0x8E2F8AFC29e9dc127103CD6AD5BCfBe661141ccb" target="_blank" rel="noopener" class="mono">0x8E2F8AFC29e9dc127103CD6AD5BCfBe661141ccb</a> · <a id="release" href="https://github.com/edycutjong/legwork/releases" target="_blank" rel="noopener" class="mono" title="GitHub release this page was built from">release</a></span>
+          <span id="overhead" class="mono">OVERHEAD … · REFUND_CEIL_GAS 120,000 · payee stipend 30,000</span>
+          <span>No backend: every live number on this page — orders, quotes, receipts, runs — comes from eth_call, eth_getLogs, the latest block base fee, eth_gasPrice and the transaction receipt. The bench figures are copied from the committed proof.</span>
+        </footer>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

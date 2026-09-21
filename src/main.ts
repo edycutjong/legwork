@@ -7,35 +7,26 @@ import { renderJudge } from './app/views/judge';
 import { h, notice, short } from './app/ui';
 import { connect, disconnect, injected, onWallet } from './app/wallet';
 
+// The shell (masthead, nav, <main>, footer) is static markup in index.html so it paints before this bundle has loaded;
+// this module adopts it. The deploy-derived href/text are re-set from deploy/arc-mainnet.json so the JSON stays the source
+// of truth and the HTML is only what the first paint shows.
 const app = document.getElementById('app')!;
+const main = document.getElementById('main')!;
+const rpcNotice = document.getElementById('rpc-notice')!;
+const overheadSlot = document.getElementById('overhead')!;
 const walletSlot = h('span');
-const overheadSlot = h('span', { class: 'mono' }, 'OVERHEAD … · REFUND_CEIL_GAS 120,000 · payee stipend 30,000');
-const main = h('main', { id: 'main', tabindex: '-1' });
-const rpcNotice = h('div');
 const LIVE_ID = (DEPLOY.orders as any)?.live?.id ?? 1;
 
-const navLinks = [
-  h('a', { href: '#/' }, 'orders'),
-  h('a', { href: `#/o/${LIVE_ID}` }, 'try the live order'),
-  h('a', { href: explorerAddress(CONTRACT), target: '_blank', rel: 'noopener' }, `contract ${short(CONTRACT)}`),
-  h('a', { href: '#/judge' }, 'for reviewers'),
-];
-
-app.append(
-  h('a', { class: 'skip', href: '#/', onClick: (e: Event) => { e.preventDefault(); main.focus(); main.scrollIntoView(); } }, 'Skip to content'),
-  h('div', { class: 'sheet' },
-    h('header', { class: 'masthead' },
-      h('a', { class: 'brand', href: '#/' }, h('img', { src: './favicon.svg', alt: '', width: '30', height: '30' }), h('strong', {}, 'Legwork'), h('span', { class: 'muted' }, 'standing USDC orders on Arc')),
-      h('nav', { 'aria-label': 'Primary' }, ...navLinks, walletSlot)),
-    rpcNotice,
-    main,
-    h('footer', { class: 'foot' },
-      h('span', {}, `Arc mainnet · chain 5042 · contract `, h('a', { href: explorerAddress(CONTRACT), target: '_blank', rel: 'noopener', class: 'mono' }, CONTRACT), ' · ', h('a', { href: __APP_VERSION__.endsWith('-dev') ? 'https://github.com/edycutjong/legwork/releases' : `https://github.com/edycutjong/legwork/releases/tag/${__APP_VERSION__}`, target: '_blank', rel: 'noopener', class: 'mono', title: 'GitHub release this page was built from' }, __APP_VERSION__)),
-      overheadSlot,
-      h('span', {}, 'No backend: every live number on this page — orders, quotes, receipts, runs — comes from eth_call, eth_getLogs, the latest block base fee, eth_gasPrice and the transaction receipt. The bench figures are copied from the committed proof.'),
-    ),
-  ),
-);
+const navLinks = [...app.querySelectorAll<HTMLAnchorElement>('nav[aria-label="Primary"] a')];
+app.querySelector('nav[aria-label="Primary"]')!.append(walletSlot);
+app.querySelector<HTMLAnchorElement>('a[data-nav="live"]')!.href = `#/o/${LIVE_ID}`;
+for (const a of app.querySelectorAll<HTMLAnchorElement>('a[data-nav="contract"], a[data-foot="contract"]')) a.href = explorerAddress(CONTRACT);
+app.querySelector('a[data-nav="contract"]')!.textContent = `contract ${short(CONTRACT)}`;
+app.querySelector('a[data-foot="contract"]')!.textContent = CONTRACT;
+const release = document.getElementById('release') as HTMLAnchorElement;
+release.href = __APP_VERSION__.endsWith('-dev') ? 'https://github.com/edycutjong/legwork/releases' : `https://github.com/edycutjong/legwork/releases/tag/${__APP_VERSION__}`;
+release.textContent = __APP_VERSION__;
+app.querySelector('a.skip')!.addEventListener('click', (e) => { e.preventDefault(); main.focus(); main.scrollIntoView(); });
 
 onWallet((w) => {
   walletSlot.replaceChildren(

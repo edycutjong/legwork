@@ -266,7 +266,9 @@ small, .label { font-size: 14px; color: var(--ink-2); }
 /* ================================================================ the landing (#/) */
 .hero { display: grid; gap: 32px; padding: 40px 0 8px; align-items: start; grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 960px) { .hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 44px; padding-top: 56px; } }
-.hero-copy > * { animation: rise var(--t-slow) both; }
+/* Transform-only entrance: content first painted at opacity 0 is excluded from LCP by Chrome, so the fade would make the
+   largest text on the page invisible to the metric and hand LCP to whatever small element paints last. */
+.hero-copy > * { animation: rise-hero var(--t-slow) both; }
 .hero-copy > :nth-child(2) { animation-delay: 60ms; }
 .hero-copy > :nth-child(3) { animation-delay: 120ms; }
 .hero-copy > :nth-child(4) { animation-delay: 180ms; }
@@ -422,6 +424,7 @@ small, .label { font-size: 14px; color: var(--ink-2); }
 @keyframes shimmer { to { transform: translateX(100%); } }
 @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes rise-hero { from { transform: translateY(8px); } to { transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition-duration: 0.01ms !important; }
   html { scroll-behavior: auto; }

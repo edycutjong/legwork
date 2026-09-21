@@ -21,6 +21,17 @@ test.describe('smoke', () => {
     for (const h of hosts) expect(ALLOWED_HOSTS).toContain(h);
   });
 
+  test('the static hero in index.html is what renderHome paints (first paint must not lie)', async ({ page, request }) => {
+    const raw = await (await request.get('/')).text();
+    await page.goto('/');
+    await expect(page.getByRole('heading', { name: 'New order' })).toBeVisible(); // renderHome has replaced the shell content
+    const rendered = await page.locator('main .hero h1').innerText();
+    const staticHtml = /<h1 id="claim">([\s\S]*?)<\/h1>/.exec(raw)?.[1] ?? '';
+    const staticText = await page.evaluate((html) => { const d = document.createElement('div'); d.innerHTML = html; return d.innerText; }, staticHtml);
+    expect(staticText).toBe(rendered);
+    expect(await page.locator('main [data-static]').count()).toBe(0);
+  });
+
   test('meta: title, description, favicon, Open Graph and Twitter card', async ({ page }) => {
     await page.goto('/');
     await expect(page).toHaveTitle(/Legwork/);
