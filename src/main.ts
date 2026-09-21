@@ -68,7 +68,7 @@ window.addEventListener('hashchange', () => { window.scrollTo({ top: 0 }); route
 route();
 overheadRead().then(({ value, fromChain }) => (overheadSlot.textContent = fromChain ? `OVERHEAD() ${value} gas (read from the contract) · REFUND_CEIL_GAS 120,000 · payee stipend 30,000` : `OVERHEAD ${value} gas (deploy record — the contract read was rate-limited) · REFUND_CEIL_GAS 120,000 · payee stipend 30,000`));
 chainOk().then(({ state, detail }) => {
-  if (state === 'down') rpcNotice.replaceChildren(notice('error', 'This browser could not read Arc mainnet from any of its public RPC endpoints (rpc.mainnet.arc.io, then the dRPC, QuickNode and Blockdaemon mirrors): ', h('span', { class: 'mono' }, detail), '. The page reads everything from the chain, so check for an extension, VPN or network rule that blocks *.arc.io, then reload.'));
+  if (state === 'down') rpcNotice.replaceChildren(notice('error', 'This browser could not read Arc mainnet from any of its public RPC endpoints (rpc.mainnet.arc.io, then the dRPC, QuickNode and Blockdaemon mirrors): ', h('span', { class: 'mono' }, detail), '. The page reads everything from the chain. "Failed to fetch" means the request never left this browser: try a private window; if that works, an extension (an ad blocker is the usual one) is blocking *.arc.io — allow this site in it and reload.'));
   else if (state === 'rate-limited') rpcNotice.replaceChildren(notice('info', 'The public Arc RPC endpoints rate-limited the page\u2019s first reads (they answer HTTP 429 in bursts). Nothing is wrong on-chain \u2014 reload in a few seconds.'));
 });
 

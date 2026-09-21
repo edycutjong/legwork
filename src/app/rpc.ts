@@ -37,7 +37,10 @@ export async function chainOk(): Promise<{ state: 'ok' | 'down' | 'rate-limited'
     const id = await retried(() => client.getChainId());
     return id === 5042 ? { state: 'ok', detail: '' } : { state: 'down', detail: `the endpoint answered chain id ${id}, not 5042` };
   } catch (e: any) {
-    const detail = String(e?.shortMessage ?? e?.message ?? e).split('\n')[0].slice(0, 160).replace(/\.$/, '');
+    // What the browser actually saw: viem's short message, the HTTP status if there was a response, and the fetch error
+    // underneath it ("Failed to fetch" = the request never left the browser: an extension, a network rule, or CORS).
+    const parts = [String(e?.shortMessage ?? e?.message ?? e).split('\n')[0], e?.status ? `HTTP ${e.status}` : '', String(e?.cause?.message ?? '').split('\n')[0]];
+    const detail = parts.filter(Boolean).join(' · ').slice(0, 220).replace(/\.$/, '');
     console.warn('[legwork] RPC check failed:', e);
     return { state: isRateLimit(e) ? 'rate-limited' : 'down', detail };
   }
