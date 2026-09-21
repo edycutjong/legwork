@@ -45,4 +45,5 @@ verdict. `npm run bench -- --n 5` repeats the bench for about a cent of real gas
 
 - Repository: https://github.com/edycutjong/legwork
 - Live app: https://legwork.edycu.dev/
+- Demo video (2:17, a real create → execute on mainnet): https://youtu.be/YPUbDlJc1lY
 - [`DEMO.md`](./DEMO.md) — every edge case with one mainnet transaction · [`ARCHITECTURE.md`](./ARCHITECTURE.md) — the contract line by line · [`README.md`](./README.md)

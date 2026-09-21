@@ -10,6 +10,7 @@
 
   [![Live page](https://img.shields.io/badge/🚀_Live-Page-A4471A?style=for-the-badge)](https://legwork.edycu.dev/)
   [![For reviewers](https://img.shields.io/badge/🧑‍⚖️_For-Reviewers-1E6F48?style=for-the-badge)](https://legwork.edycu.dev/#/judge)
+  [![Demo video](https://img.shields.io/badge/▶_Demo-2:17_on_YouTube-FF0000?style=for-the-badge)](https://youtu.be/YPUbDlJc1lY)
   [![Contract on Arc mainnet](https://img.shields.io/badge/⛓️_Contract-0x8E2F…1ccb-1C1A16?style=for-the-badge)](https://explorer.arc.io/address/0x8E2F8AFC29e9dc127103CD6AD5BCfBe661141ccb)
   [![Built for Arc Microgrants](https://img.shields.io/badge/DoraHacks-Arc_Microgrants-8b5cf6?style=for-the-badge)](https://dorahacks.io/hackathon/arc-microgrants/detail)
 
@@ -154,6 +155,7 @@ shares, not an Arc feature; the recheck's price equality is the guard that would
 | | |
 |---|---|
 | Live page | [legwork.edycu.dev](https://legwork.edycu.dev/) · reviewer page [`#/judge`](https://legwork.edycu.dev/#/judge) · seeded order [`#/o/1`](https://legwork.edycu.dev/#/o/1) |
+| Demo video | [2:17 on YouTube](https://youtu.be/YPUbDlJc1lY) — a real create → execute on mainnet (order #10, receipt [`0x2b33e38f…d255`](https://explorer.arc.io/tx/0x2b33e38f8404b12be1c07706c196991a05da1824ab08ea1b95f833c6cd6ad255)), recorded from the live page; captions included |
 | Contract | [`0x8E2F8AFC29e9dc127103CD6AD5BCfBe661141ccb`](https://explorer.arc.io/address/0x8E2F8AFC29e9dc127103CD6AD5BCfBe661141ccb) on Arc mainnet (5042) · `OVERHEAD = 32503` gas, calibrated on-chain (three runs, drift 1,103 on all three, spread 0); v2 of the contract — v1 and the calibration deploy are kept in the record (Corrections below) · on-chain runtime bytecode == `forge build` with the immutable filled (`scripts/preflight.py --bytecode`) |
 | Open orders | #1 `live` (0.02 USDC / 60 s / tip 0.01 — **two runs left for reviewers, first come**; due since 2026-09-18, the missed periods are owed, so one wallet can take both back-to-back) · #2 `rejecting` (paused: its payee is the [`Rejector`](./contracts/Rejector.sol) `0x1c17C16177f2aC609440ea20c00D0e108F617c47`) · #3 `capped` (`maxGasPrice` 20 Gwei) |
 | Key receipts | hero [`0x2f6a352d…0c95`](https://explorer.arc.io/tx/0x2f6a352d11823a37ad085151067856131833ef978445fbed5941e7d17b5b0c95) · first live run [`0x0a598c84…d04d`](https://explorer.arc.io/tx/0x0a598c846c6a6fd0e9f07fcee1f6d643d39bb2c2483ae0e3465ee3c6775cd04d) · paused [`0xd07f9fb9…dc64`](https://explorer.arc.io/tx/0xd07f9fb9f06deeab35a0e795ab0440f8150fb60e4f816993d57bee6a1470dc64) · capped [`0x6595b5a6…3c98`](https://explorer.arc.io/tx/0x6595b5a60548ab65b879f9012142764f3118d582fdc29d5dc8da2b457d413c98) · `NotDue` [`0x4fc9a3af…56a6`](https://explorer.arc.io/tx/0x4fc9a3af02079e9bad40001108936c268a8269c88c231e6633517db854f556a6) |

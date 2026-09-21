@@ -11,6 +11,7 @@ const PAUSED_TX = '0xd07f9fb9f06deeab35a0e795ab0440f8150fb60e4f816993d57bee6a147
 const NOTDUE_TX = '0x4fc9a3af02079e9bad40001108936c268a8269c88c231e6633517db854f556a6';
 const CAPPED_TX = '0x6595b5a60548ab65b879f9012142764f3118d582fdc29d5dc8da2b457d413c98';
 const REPO = 'https://github.com/edycutjong/legwork';
+const VIDEO = 'https://youtu.be/YPUbDlJc1lY'; // 2:17 — a real create → execute on mainnet (order #10), recorded from this page
 
 export function renderJudge(root: HTMLElement) {
   const live = (DEPLOY.orders as any)?.live?.id ?? 1;
@@ -55,7 +56,7 @@ export function renderJudge(root: HTMLElement) {
 
       h('h3', {}, 'Links'),
       h('div', { class: 'links' },
-        link(REPO, 'repository'), link(`${REPO}/blob/main/DEMO.md`, 'DEMO.md — every edge case, one tx each'), link(`${REPO}/blob/main/ARCHITECTURE.md`, 'ARCHITECTURE.md'), link('#/', 'the app'),
+        link(REPO, 'repository'), link(VIDEO, 'demo video — 2:17, a real create → execute'), link(`${REPO}/blob/main/DEMO.md`, 'DEMO.md — every edge case, one tx each'), link(`${REPO}/blob/main/ARCHITECTURE.md`, 'ARCHITECTURE.md'), link('#/', 'the app'),
       ),
     ),
   );
