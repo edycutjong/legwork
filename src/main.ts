@@ -30,7 +30,7 @@ app.append(
     rpcNotice,
     main,
     h('footer', { class: 'foot' },
-      h('span', {}, `Arc mainnet · chain 5042 · contract `, h('a', { href: explorerAddress(CONTRACT), target: '_blank', rel: 'noopener', class: 'mono' }, CONTRACT)),
+      h('span', {}, `Arc mainnet · chain 5042 · contract `, h('a', { href: explorerAddress(CONTRACT), target: '_blank', rel: 'noopener', class: 'mono' }, CONTRACT), ' · ', h('a', { href: __APP_VERSION__.endsWith('-dev') ? 'https://github.com/edycutjong/legwork/releases' : `https://github.com/edycutjong/legwork/releases/tag/${__APP_VERSION__}`, target: '_blank', rel: 'noopener', class: 'mono', title: 'GitHub release this page was built from' }, __APP_VERSION__)),
       overheadSlot,
       h('span', {}, 'No backend: every live number on this page — orders, quotes, receipts, runs — comes from eth_call, eth_getLogs, the latest block base fee, eth_gasPrice and the transaction receipt. The bench figures are copied from the committed proof.'),
     ),
