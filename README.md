@@ -11,6 +11,7 @@
   [![Live page](https://img.shields.io/badge/🚀_Live-Page-A4471A?style=for-the-badge)](https://legwork.edycu.dev/)
   [![For reviewers](https://img.shields.io/badge/🧑‍⚖️_For-Reviewers-1E6F48?style=for-the-badge)](https://legwork.edycu.dev/#/judge)
   [![Demo video](https://img.shields.io/badge/▶_Demo-2:17_on_YouTube-FF0000?style=for-the-badge)](https://youtu.be/YPUbDlJc1lY)
+  [![Pitch deck](https://img.shields.io/badge/📽️_Pitch-Deck_12_slides-1C1A16?style=for-the-badge)](https://legwork.edycu.dev/deck.html)
   [![Contract on Arc mainnet](https://img.shields.io/badge/⛓️_Contract-0x8E2F…1ccb-1C1A16?style=for-the-badge)](https://explorer.arc.io/address/0x8E2F8AFC29e9dc127103CD6AD5BCfBe661141ccb)
   [![Built for Arc Microgrants](https://img.shields.io/badge/DoraHacks-Arc_Microgrants-8b5cf6?style=for-the-badge)](https://dorahacks.io/hackathon/arc-microgrants/detail)
   [![BUIDL](https://img.shields.io/badge/BUIDL-49025-8b5cf6?style=for-the-badge)](https://dorahacks.io/buidl/49025)
