@@ -367,4 +367,4 @@ not discovered.
 
 ## 🙏 Acknowledgments
 
-Built for the [Arc Microgrants](https://dorahacks.io/hackathon/arc-microgrants/detail) program on DoraHacks. The Arc docs quoted above (`evm-differences`, `stable-fee-design`, `usdc-system-events`) are the ground truth every claim here cites; `docs/FRICTION-LOG.md` is what we found when they and the RPC disagreed.
+Built for the [Arc Microgrants](https://dorahacks.io/hackathon/arc-microgrants/detail) program on DoraHacks. The Arc docs quoted above (`evm-differences`, `stable-fee-design`, `usdc-system-events`) are the ground truth every claim here cites; `docs/FRICTION-LOG.md` is what we found when they and the RPC disagreed — filed with Arc as [circlefin/arc-node#454](https://github.com/circlefin/arc-node/issues/454).
