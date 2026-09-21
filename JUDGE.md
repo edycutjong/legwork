@@ -21,7 +21,7 @@ Arc mainnet, chain 5042. No backend, no oracle, no keeper network, nothing mocke
 | Bench | 30 consecutive real executes on one order with 1-second periods: drift 0 on **30/30**, refund ÷ fee 1.000000 on 30/30, `gasUsed` p50 = p95 = 58,415; 5 rows by the payee collecting its own payment (`proof/rows.csv`, `proof/results.json`) |
 | Branches | refusing payee → [Paused, executor still repaid](https://explorer.arc.io/tx/0xd07f9fb9f06deeab35a0e795ab0440f8150fb60e4f816993d57bee6a1470dc64) · not due → [revert, 24,323 gas](https://explorer.arc.io/tx/0x4fc9a3af02079e9bad40001108936c268a8269c88c231e6633517db854f556a6) · capped price → [executor eats the difference](https://explorer.arc.io/tx/0x6595b5a60548ab65b879f9012142764f3118d582fdc29d5dc8da2b457d413c98) · first live run [`0x0a598c84…d04d`](https://explorer.arc.io/tx/0x0a598c846c6a6fd0e9f07fcee1f6d643d39bb2c2483ae0e3465ee3c6775cd04d) |
 | Spend | 0.1944 USDC of gas over 107 mainnet transactions; all 107 receipts committed under [`proof/receipts/`](./proof/receipts/) |
-| Tests | **42 Foundry** (34 unit · 2 fuzz × 512 · 6 invariants × 64 runs × depth 32) · **36 vitest** incl. **4 fast-check properties × 5,000 = 20,000 generated cases** on the refund arithmetic and the log reducer · Playwright end-to-end on desktop + mobile incl. live mainnet reads |
+| Tests | **47 Foundry** (38 unit · 3 fuzz × 512 · 6 invariants × 64 runs × depth 32) · **36 vitest** incl. **4 fast-check properties × 5,000 = 20,000 generated cases** on the refund arithmetic and the log reducer · Playwright end-to-end on desktop + mobile incl. live mainnet reads |
 
 ## Reproduce (no key needed)
 

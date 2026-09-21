@@ -9,6 +9,7 @@ optimizer = true
 optimizer_runs = 200
 bytecode_hash = "none"
 cbor_metadata = false
+no_match_coverage = "(test/|Rejector)"   # coverage is measured on Legwork.sol: the tests are not the product, and Rejector's one statement is a bare revert() that solc merges with the dispatcher revert, so its anchor can never register a hit although three tests exercise it
 fs_permissions = [{ access = "read-write", path = "./" }]
 
 [fuzz]

@@ -204,7 +204,7 @@ export async function renderHome(root: HTMLElement) {
         stat('30 / 30', 'bench runs with drift 0 (gate ≤ 50 gas)'),
         stat('58,415', 'gasUsed p50 = p95 · ≈ 0.00117 USDC at 20 Gwei'),
         stat('1.000000', 'refund ÷ real fee on every row'),
-        stat('42', 'Foundry cases · unit, fuzz × 512, invariants × 64 × 32'),
+        stat('47', 'Foundry cases · unit, fuzz × 512, invariants × 64 × 32'),
         stat('36', 'vitest cases · 4 properties × 5,000 = 20,000 generated inputs'),
         stat('107', 'mainnet receipts committed · 0.1944 USDC of gas'))),
     h('section', { class: 'section', 'aria-labelledby': 'limits-h' },

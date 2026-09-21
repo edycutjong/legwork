@@ -40,7 +40,7 @@ The `live` order was funded for three runs; one was used above, so two are left 
 ```sh
 git clone https://github.com/edycutjong/legwork && cd legwork
 git submodule update --init          # forge-std
-forge test                            # 42 Foundry cases: unit + 2 fuzz suites + 6 invariants (≈ 1 s)
+forge test                            # 47 Foundry cases: unit + 2 fuzz suites + 6 invariants (≈ 1 s)
 npm install && npm test               # 36 vitest cases (incl. 4 fast-check properties × 5,000 = 20,000 generated cases); the receipt decoder's fixtures are committed mainnet receipts (≈ 1 s)
 npm run recheck                       # recompute every committed execute receipt from raw data; exit code is the verdict (read-only, ≈ 40 s)
 python3 scripts/preflight.py --bytecode   # readiness gate + on-chain runtime code == forge build with the immutable filled

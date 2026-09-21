@@ -18,3 +18,6 @@ broadcast/
 .lighthouseci/
 # kitchen media is synced, never authored here
 /assets/
+!/assets/icon-animated.svg
+!/assets/readme-hero-animated.svg
+!/assets/receipt-order-5.png

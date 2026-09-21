@@ -779,5 +779,91 @@ contract LegworkTest is Test {
         assertEq(refund, metered * p);
         assertLe(refund, value, "refund bounded by the deposit");
     }
-}
 
+    // ------------------------------------------------------------ the remaining branches (coverage audit 2026-09-21)
+
+    function test_constructor_rejectsOverheadBelowTheIntrinsic() public {
+        // OVERHEAD - INTRINSIC_GAS is computed inside execute(); an OVERHEAD below 21,000 would underflow it
+        vm.expectRevert(Legwork.BadParams.selector);
+        new Legwork(21_000 - 1);
+        Legwork boundary = new Legwork(21_000);
+        assertEq(boundary.OVERHEAD(), 21_000, "the boundary itself is accepted");
+    }
+
+    function test_create_rejectsADepositAboveUint128() public {
+        // deposit is stored as uint128; a larger msg.value must revert rather than truncate
+        uint256 tooMuch = uint256(type(uint128).max) + 1;
+        vm.deal(payer, tooMuch);
+        vm.prank(payer);
+        (bool ok, bytes memory ret) = address(lw).call{value: tooMuch}(abi.encodeCall(lw.create, (payee, 0.02 ether, 60, 0.01 ether, 100 gwei)));
+        assertFalse(ok, "reverts");
+        assertEq(bytes4(ret), Legwork.BadParams.selector);
+        vm.prank(payer);
+        uint256 id = lw.create{value: type(uint128).max}(payee, 0.02 ether, 60, 0.01 ether, 100 gwei);
+        assertEq(_order(id).deposit, type(uint128).max, "exactly uint128.max is accepted");
+    }
+
+    function test_execute_meteredIsCappedAtRefundCeil() public {
+        // an OVERHEAD constant far above the ceiling makes every measurement exceed REFUND_CEIL_GAS: the cap holds,
+        // so the most an executor can ever be refunded per run is REFUND_CEIL_GAS x price
+        Legwork big = new Legwork(CEIL + 100_000);
+        vm.prank(payer);
+        uint256 id = big.create{value: 1 ether}(payee, 0.02 ether, 60, 0.01 ether, 100 gwei);
+        uint256 e0 = exec.balance;
+        vm.recordLogs();
+        vm.prank(exec);
+        big.execute(id);
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        (uint256 metered, uint256 price, uint256 refund,,,) = abi.decode(logs[logs.length - 1].data, (uint256, uint256, uint256, uint256, uint48, bool));
+        assertEq(metered, CEIL, "metered is clamped to the ceiling");
+        assertEq(price, BASEFEE);
+        assertEq(refund, CEIL * BASEFEE, "refund = ceiling x price");
+        assertEq(exec.balance, e0 + refund + 0.01 ether, "paid out exactly refund + tip");
+    }
+
+    /// `if (refund > deposit) refund = deposit;` is a guard the pre-check makes unreachable: after
+    /// `deposit >= amount + tip + REFUND_CEIL_GAS x price` and `deposit -= amount + tip`, the remainder is at least
+    /// REFUND_CEIL_GAS x price, and refund = min(metered, REFUND_CEIL_GAS) x price at the same price. The paused branch
+    /// only adds `amount` back. This fuzz drives the worst case (a measurement above the ceiling, deposit exactly at the
+    /// minimum, every price in range) and shows the refund is never clamped — which is why that branch has no coverage.
+    function testFuzz_refundNeverExceedsTheDepositSoTheGuardIsNeverTaken(uint96 amount, uint96 tip, uint48 maxGp, uint64 extra, bool refuse) public {
+        amount = uint96(bound(amount, 1, 1 ether));
+        tip = uint96(bound(tip, 0, 1 ether));
+        maxGp = uint48(bound(maxGp, 1, 1000 gwei));
+        vm.fee(maxGp);          // basefee == maxGasPrice, so the pre-check prices at maxGp
+        vm.txGasPrice(maxGp);   // and the executor's price = min(gasprice, 2 x basefee, maxGasPrice) = maxGp
+        Legwork big = new Legwork(CEIL + 100_000); // worst case: every run meters the full ceiling
+        address p = refuse ? address(new Rejector()) : payee;
+        uint256 need = uint256(amount) + tip + CEIL * uint256(maxGp);
+        uint256 value = need + extra;
+        vm.deal(payer, value);
+        vm.prank(payer);
+        uint256 id = big.create{value: value}(p, amount, 60, tip, maxGp);
+        vm.recordLogs();
+        vm.prank(exec);
+        big.execute(id);
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        (, uint256 price, uint256 refund,,, bool paid) = abi.decode(logs[logs.length - 1].data, (uint256, uint256, uint256, uint256, uint48, bool));
+        assertEq(price, maxGp);
+        assertEq(refund, CEIL * uint256(maxGp), "the refund is the unclamped ceiling x price");
+        assertEq(paid, !refuse);
+        uint256 spent = refund + tip + (paid ? amount : 0);
+        assertEq(_orderOf(big, id).deposit, value - spent, "deposit accounting is exact: nothing was clamped");
+        assertGe(value - spent, uint256(extra), "the extra never had to cover the refund");
+    }
+
+    function test_rejector_refusesEveryPayment() public {
+        Rejector r = new Rejector();
+        vm.deal(stranger, 1 ether);
+        vm.prank(stranger);
+        (bool ok,) = address(r).call{value: 1}("");
+        assertFalse(ok, "Rejector refuses a native transfer");
+        assertEq(address(r).balance, 0);
+    }
+
+    function _orderOf(Legwork target, uint256 id) internal view returns (Legwork.Order memory o) {
+        (bool ok, bytes memory d) = address(target).staticcall(abi.encodeWithSelector(target.orders.selector, id));
+        require(ok);
+        o = abi.decode(d, (Legwork.Order));
+    }
+}

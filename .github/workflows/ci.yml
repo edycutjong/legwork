@@ -53,6 +53,10 @@ jobs:
         run: forge build --sizes
       - name: forge test (unit · fuzz · invariants)
         run: forge test -vv
+      - name: forge coverage (lines must stay at 100% on contracts/Legwork.sol)
+        run: |
+          forge coverage --report summary | tee coverage.txt
+          grep -E '^\| contracts/Legwork\.sol +\| 100\.00%' coverage.txt || { echo '::error::line coverage below 100% on contracts/Legwork.sol'; exit 1; }
 
   # ── STAGE 2: Security (parallel with Stage 1) ───────────────────────
   secret-scan:

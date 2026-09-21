@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="docs/assets/icon.svg" alt="Legwork — a torn receipt on which an ink stride walks the payment out and a copper stroke returns the exact gas to whoever ran it" width="144">
+  <img src="docs/assets/icon-animated.svg" alt="Legwork — a torn receipt on which an ink stride walks the payment out and a copper stroke returns the exact gas to whoever ran it" width="144">
   <h1>Legwork 🧾</h1>
   <p><em>Standing USDC orders anyone can run — and be repaid the exact gas, in the same dollar, in the same transaction.</em></p>
   <img src="docs/assets/readme-hero-animated.svg" alt="Legwork — one transaction splits the order's ink deposit: payment to the payee, exact copper gas back to whoever ran it" width="100%">
@@ -170,7 +170,8 @@ shares, not an Arc feature; the recheck's price equality is the guard that would
 |---|---|
 | Bench | **30 real executes**, one order, 1-second periods: `gasUsed` p50 **58,415** · p95 **58,415** · **drift 0 on every row** (gate ≤ 50) · **refund ÷ real fee = 1.000000** on every row (pre-stated: 1.00 ± 0.02) · executor net after tip = exactly the tip · 25 rows by the payer wallet, 5 by **the payee collecting its own payment** |
 | Cost of a run | 58,415 gas ≈ **0.00117 USDC** at Arc's 20 Gwei base fee; a refused payment costs 60,565; a `NotDue` revert 24,323 |
-| Tests | **78 tests** — **42 Foundry** cases (34 unit · 2 fuzz suites × 512 runs · 6 invariants × 64 runs × depth 32) · **36 vitest** cases incl. **4 fast-check properties × 5,000 = 20,000 generated cases** on the refund arithmetic and the log reducer; the receipt decoder's fixtures are committed mainnet receipts · Playwright end-to-end on desktop + mobile incl. live mainnet reads |
+| Tests | **83 tests** — **47 Foundry** cases (38 unit · 3 fuzz suites × 512 runs · 6 invariants × 64 runs × depth 32) · **36 vitest** cases incl. **4 fast-check properties × 5,000 = 20,000 generated cases** on the refund arithmetic and the log reducer; the receipt decoder's fixtures are committed mainnet receipts · Playwright end-to-end on desktop + mobile incl. live mainnet reads |
+| Solidity coverage | `forge coverage` on `contracts/Legwork.sol`: **100 % lines · 100 % functions · 98.7 % statements · 93.5 % branches**, gated in CI at 100 % lines. The two unreached anchors are documented, not missing: `if (refund > deposit)` (line 165) is a guard the pre-check makes unreachable — `testFuzz_refundNeverExceedsTheDepositSoTheGuardIsNeverTaken` drives the worst case and shows it never binds — and the `msg.value > uint128.max` revert (line 75) *is* executed by `test_create_rejectsADepositAboveUint128`, but solc merges its `revert BadParams()` with the identical one on the line above (5 in source, 4 in bytecode), so its anchor is dead code. `Rejector.sol` is excluded for the same reason: its one statement is a bare `revert()` merged with the dispatcher's. The contract is frozen on mainnet, so the source is not reshaped for the tool. |
 | Recheck | `npm run recheck` recomputes all 75 committed execute receipts (36 on v2, 36 on the retired v1, 3 calibration) from raw data (six equalities per row, incl. `price == min(effectiveGasPrice, 2·basefee, maxGasPrice)`) — `all checks passed` |
 | Readiness | `python3 scripts/preflight.py --bytecode` fails on a README count that stops matching the runners, a placeholder, private material, a DEMO hash without a receipt, or on-chain code that is not this source |
 
@@ -267,7 +268,7 @@ npm run lint            # oxlint
 npm run typecheck       # tsc --noEmit
 npm test                # vitest: 32 unit cases + 4 fast-check properties (20,000 cases)
 npm run test:coverage   # + v8 coverage
-forge test              # 42 Foundry cases: unit · fuzz × 512 · invariants × 64 × 32
+forge test              # 47 Foundry cases: unit · fuzz × 512 · invariants × 64 × 32
 npm run ci              # audit + lint + typecheck + coverage
 
 # ── Proof ─────────────────────────────────────
@@ -285,7 +286,7 @@ npm run bench -- --n 5  # ≈ a cent of real gas: creates, runs 5×, cancels its
 
 | Layer | Tool | Status |
 |---|---|---|
-| Contract | Foundry — 42 cases, 2 fuzz suites × 512, 6 invariants × 64 × depth 32 | ✅ |
+| Contract | Foundry — 47 cases, 3 fuzz suites × 512, 6 invariants × 64 × depth 32 | ✅ |
 | Unit + property | vitest 36 cases · fast-check 4 × 5,000 = 20,000 | ✅ |
 | Proof | `npm run recheck` over 75 mainnet receipts · `preflight.py --bytecode` | ✅ |
 | E2E | Playwright, 4 specs on chromium + Pixel 7, incl. live mainnet reads | ✅ |
@@ -301,7 +302,7 @@ npm run bench -- --n 5  # ≈ a cent of real gas: creates, runs 5×, cancels its
 
 ```
 contracts/Legwork.sol         the contract (212 lines) · contracts/Rejector.sol  the refusing demo payee
-test/Legwork.t.sol            34 unit + 2 fuzz · test/Legwork.invariants.t.sol  6 invariants with a handler
+test/Legwork.t.sol            38 unit + 3 fuzz · test/Legwork.invariants.t.sol  6 invariants with a handler
 test/ts/                      32 vitest cases over the committed receipts + properties.test.ts (fast-check)
 e2e/                          Playwright: smoke · judge · live · responsive
 src/lib/                      order arithmetic · receipt decoding · two-ended bounded scan (pure, tested)
