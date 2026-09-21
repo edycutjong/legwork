@@ -20,7 +20,7 @@
   ![Arc mainnet 5042](https://img.shields.io/badge/Arc-mainnet_5042-1C1A16?style=flat)
   ![USDC is the gas](https://img.shields.io/badge/gas-native_USDC-A4471A?style=flat)
   ![Solidity 0.8.30](https://img.shields.io/badge/Solidity-0.8.30_osaka-363636?style=flat&logo=solidity&logoColor=white)
-  ![Foundry](https://img.shields.io/badge/Foundry-42_tests-1E6F48?style=flat)
+  ![Foundry](https://img.shields.io/badge/Foundry-47_tests-1E6F48?style=flat)
   ![vitest](https://img.shields.io/badge/vitest-36_tests-1E6F48?style=flat&logo=vitest&logoColor=white)
   ![fast-check](https://img.shields.io/badge/fast--check-20%2C000_cases-1E6F48?style=flat)
   ![Playwright](https://img.shields.io/badge/Playwright-E2E_desktop+mobile-1E6F48?style=flat&logo=playwright&logoColor=white)
@@ -36,6 +36,11 @@
 ---
 
 ## 📸 See it in Action
+
+<div align="center">
+  <img src="docs/assets/broll.gif" alt="The live page, real time: order #10 is due; Execute is pressed; the receipt appears — payee paid, executor refunded 58,415 gas × 20 Gwei, real fee identical, net = the tip" width="100%">
+  <sub>Real create → execute on Arc mainnet, recorded from the live page at 1× speed (8 seconds from the demo video, order #10).</sub>
+</div>
 
 <div align="center"><img src="docs/assets/receipt-order-5.png" alt="The receipt the page shows after Execute: payee received 0.001 USDC; executor refunded +0.0011683 USDC (58415 gas metered × 20 Gwei); executor tipped +0.001; real fee paid −0.0011683 (receipt.gasUsed 58415 × effectiveGasPrice 20 Gwei); executor net +0.001, drift 0 gas, refund ÷ fee 1.000000" width="760"></div>
 
@@ -78,6 +83,12 @@ executor and collect on the tick (five of the thirty bench rows are exactly that
 ---
 
 ## 🏗️ Architecture & Tech Stack
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/architecture-dark.png">
+  <img src="docs/assets/architecture-light.png" alt="Architecture: a payer funds a standing order with native USDC; anyone calls execute(id) when it is due; inside that one transaction the contract pays the payee, meters the gas between two gasleft() reads plus the calibrated OVERHEAD, and repays the executor min(metered, 120,000) × min(gasprice, 2·basefee, maxGasPrice) plus the tip from the deposit; the receipt's gasUsed × effectiveGasPrice equals the refund (drift 0 on 30/30 runs); the browser page reads everything through eth_call, eth_getLogs and receipts with no backend" width="100%">
+</picture>
+
 
 | Layer | Technology |
 |---|---|
@@ -153,7 +164,7 @@ shares, not an Arc feature; the recheck's price equality is the guard that would
 
 **No wallet needed anywhere to read** — every page is an anonymous JSON-RPC call; a wallet is touched only when you press *Create*, *Execute* or a payer button.
 
-| | |
+| Surface | Where to look |
 |---|---|
 | Live page | [legwork.edycu.dev](https://legwork.edycu.dev/) · reviewer page [`#/judge`](https://legwork.edycu.dev/#/judge) · seeded order [`#/o/1`](https://legwork.edycu.dev/#/o/1) |
 | Demo video | [2:17 on YouTube](https://youtu.be/YPUbDlJc1lY) — a real create → execute on mainnet (order #10, receipt [`0x2b33e38f…d255`](https://explorer.arc.io/tx/0x2b33e38f8404b12be1c07706c196991a05da1824ab08ea1b95f833c6cd6ad255)), recorded from the live page; captions included |
@@ -167,7 +178,7 @@ shares, not an Arc feature; the recheck's price equality is the guard that would
 
 ## 📊 Engineering Rigor
 
-| | |
+| Dimension | Evidence |
 |---|---|
 | Bench | **30 real executes**, one order, 1-second periods: `gasUsed` p50 **58,415** · p95 **58,415** · **drift 0 on every row** (gate ≤ 50) · **refund ÷ real fee = 1.000000** on every row (pre-stated: 1.00 ± 0.02) · executor net after tip = exactly the tip · 25 rows by the payer wallet, 5 by **the payee collecting its own payment** |
 | Cost of a run | 58,415 gas ≈ **0.00117 USDC** at Arc's 20 Gwei base fee; a refused payment costs 60,565; a `NotDue` revert 24,323 |
