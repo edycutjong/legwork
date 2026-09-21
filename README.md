@@ -13,6 +13,7 @@
   [![Demo video](https://img.shields.io/badge/▶_Demo-2:17_on_YouTube-FF0000?style=for-the-badge)](https://youtu.be/YPUbDlJc1lY)
   [![Contract on Arc mainnet](https://img.shields.io/badge/⛓️_Contract-0x8E2F…1ccb-1C1A16?style=for-the-badge)](https://explorer.arc.io/address/0x8E2F8AFC29e9dc127103CD6AD5BCfBe661141ccb)
   [![Built for Arc Microgrants](https://img.shields.io/badge/DoraHacks-Arc_Microgrants-8b5cf6?style=for-the-badge)](https://dorahacks.io/hackathon/arc-microgrants/detail)
+  [![BUIDL](https://img.shields.io/badge/BUIDL-49025-8b5cf6?style=for-the-badge)](https://dorahacks.io/buidl/49025)
 
   <br/>
 
