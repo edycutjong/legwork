@@ -2,7 +2,11 @@ import { expect, test } from '@playwright/test';
 
 // The page needs no key, no wallet and no flag: reading is anonymous JSON-RPC.
 test.describe('smoke', () => {
-  test('home renders the form and the footer without console errors, and talks to exactly one host', async ({ page }) => {
+  // The only hosts the page may ever contact: itself and Arc's documented public RPC endpoints (src/lib/chain.ts RPC_URLS —
+  // the fallback transport moves to the next one when the primary refuses, which a rate-limited CI runner does see).
+  const ALLOWED_HOSTS = ['localhost:4173', 'rpc.mainnet.arc.io', 'rpc.drpc.mainnet.arc.io', 'rpc.quicknode.mainnet.arc.io', 'rpc.blockdaemon.mainnet.arc.io'];
+
+  test('home renders the form and the footer without console errors, and talks only to Arc RPC hosts', async ({ page }) => {
     const errors: string[] = [];
     const hosts = new Set<string>();
     page.on('pageerror', (e) => errors.push(String(e)));
@@ -14,7 +18,7 @@ test.describe('smoke', () => {
     await expect(page.locator('.foot')).toContainText('chain 5042');
     await expect(page.locator('.foot')).toContainText('0x8E2F8AFC29e9dc127103CD6AD5BCfBe661141ccb');
     expect(errors).toEqual([]);
-    for (const h of hosts) expect(['localhost:4173', 'rpc.mainnet.arc.io']).toContain(h);
+    for (const h of hosts) expect(ALLOWED_HOSTS).toContain(h);
   });
 
   test('meta: title, description, favicon, Open Graph and Twitter card', async ({ page }) => {
