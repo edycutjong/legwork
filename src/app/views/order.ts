@@ -47,6 +47,8 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
   const card = h('div', { class: 'card order-card' });
   left.append(card);
   let timer: number | undefined;
+  let slowTimer: number | undefined; // the 15 s chain re-read; `timer` is the 1 s local clock
+  let busy = false; // a transaction this page sent is in flight: the card is not redrawn underneath its status
   let offWallet = () => {};
   let gen = 0; // a history-scan reset while a round is in flight makes that round's result stale
   let seenBlock = 0n; // the newest block this page has seen a receipt in — the scan head must not lag it
@@ -109,6 +111,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
     const resume = h('button', { class: 'btn quiet', type: 'button', disabled: st !== 'Paused' }, 'Resume');
     const cancel = h('button', { class: 'btn danger', type: 'button' }, 'Cancel & withdraw');
     const run = async (label: string, f: () => Promise<`0x${string}`>) => {
+      busy = true;
       msg.replaceChildren(notice('info', spinner(), ` ${label}…`));
       try {
         const hash = await f();
@@ -118,6 +121,8 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
         msg.replaceChildren(notice('ok', `${label}: done. `, txLink(hash)));
       } catch (e) {
         msg.replaceChildren(notice('error', errorText(e)));
+      } finally {
+        busy = false;
       }
     };
     topUp.addEventListener('click', () => run('Top up', () => sendTopUp(id, BigInt(Math.round(parseFloat(topUpAmt.value) * 1e6)) * 10n ** 12n)));
@@ -133,6 +138,7 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
     [order, hd] = await Promise.all([getOrder(id), head()]);
     if (order.payer === ZERO) {
       if (timer) clearInterval(timer);
+      if (slowTimer) clearInterval(slowTimer);
       offWallet();
       card.replaceChildren(
         h('h2', {}, `Order #${id}`),
@@ -155,11 +161,30 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
     if (cd && st === 'Waiting') cd.textContent = countdown(Number(order.nextDue - now));
   }, 1000);
   offWallet = onWallet(() => drawCard());
-  window.addEventListener('hashchange', () => { if (timer) clearInterval(timer); offWallet(); }, { once: true });
+  // The 1 s tick only moves the local clock; the order itself was read once. A shared order (the README's "first come"
+  // live order) can be executed, topped up or cancelled from another wallet meanwhile — re-read it every 15 s and
+  // redraw only when the chain says it changed, never under a transaction this page is waiting on (drawCard
+  // replaces the whole card, status line and payer inputs included).
+  const changed = (a: Order, b: Order) => a.nextDue !== b.nextDue || a.deposit !== b.deposit || a.paused !== b.paused || a.payer !== b.payer;
+  slowTimer = window.setInterval(async () => {
+    if (document.hidden || busy) return;
+    try {
+      const [o, hd2] = await Promise.all([getOrder(id), head()]);
+      if (busy) return;
+      hd = hd2; // the base fee feeds needed/cap on the next redraw; the countdown tick reads it too
+      if (!changed(order, o)) return;
+      order = o;
+      if (order.payer === ZERO) { await refresh(); return; }
+      drawCard();
+      loadRuns(true); // a run by someone else belongs in the table
+    } catch { /* transient RPC failure: the card keeps its last good read; the next tick tries again */ }
+  }, 15_000);
+  window.addEventListener('hashchange', () => { if (timer) clearInterval(timer); if (slowTimer) clearInterval(slowTimer); offWallet(); }, { once: true });
 
   // ---------------------------------------------------------------- execute → receipt
   async function execute(btn: HTMLButtonElement, out: HTMLElement) {
     btn.disabled = true;
+    busy = true;
     out.replaceChildren(notice('info', spinner(), ' Waiting for the wallet…'));
     try {
       if (!wallet()) await connect();
@@ -176,6 +201,8 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
     } catch (e) {
       out.replaceChildren(notice('error', errorText(e)));
       btn.disabled = false;
+    } finally {
+      busy = false;
     }
   }
 

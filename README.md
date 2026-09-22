@@ -221,8 +221,8 @@ The nine limits and the corrections log are kept in [What we do not claim](#-wha
 ### For reviewers — the 60-second path, no clone
 **Run the seeded order** (any wallet holding a few cents of USDC on Arc): open
 [`legwork.edycu.dev/#/o/1`](https://legwork.edycu.dev/#/o/1), press **Execute — anyone can**,
-read the receipt. The payee gets 0.02 USDC; you get the metered gas back plus a 0.01 USDC tip. Two runs were left at the time of writing, first come — and since the order has been due since
-2026-09-18, the missed periods are owed, so one reviewer can take both back-to-back (the card says how many are left right now). No wallet? Open the
+read the receipt. The payee gets 0.02 USDC; you get the metered gas back plus a 0.01 USDC tip. Four runs were left at the time of writing (topped up 2026-09-22), first come — and since the order has been due since
+2026-09-18, the missed periods are owed, so one reviewer can take several back-to-back (the card says how many are left right now, and re-reads the chain every 15 s). No wallet? Open the
 [committed hero receipt](https://legwork.edycu.dev/#/o/5/tx/0x2f6a352d11823a37ad085151067856131833ef978445fbed5941e7d17b5b0c95) — read from the chain, no signing.
 
 **Build your own in 60:** *New order* → payee, amount, interval, tip → **Create** (the deposit for one run is quoted from the latest

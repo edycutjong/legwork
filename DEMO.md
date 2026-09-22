@@ -30,7 +30,7 @@ on the 36 runs of the retired v1) and what happens when things go wrong.
 2. Press **Execute — anyone can**. The page sends `execute(1)` with priority 0 at `max(eth_gasPrice, 20 Gwei)`.
 3. Read the receipt: the payee got 0.02 USDC, you got the metered gas back plus 0.01 USDC, and the real fee from the receipt is printed beside the refund.
 
-The `live` order was funded for three runs; one was used above, so two are left for reviewers, first come — the order has been due since 2026-09-18 and the missed periods are owed, so one wallet can take both back-to-back (then it reads *Underfunded — top up ≥ 0.026*, which is also a state worth seeing).
+The `live` order was funded for three runs; one was used above, then it was topped up on 2026-09-22 (transaction linked in the README's *Open orders* row) to **four** runs for reviewers, first come — the order has been due since 2026-09-18 and the missed periods are owed, so one wallet can take several back-to-back (then it reads *Underfunded — top up ≥ 0.026*, which is also a state worth seeing; the card re-reads the chain every 15 s, so a run taken from another wallet shows up without a reload).
 **Prerequisite:** USDC on Arc in your wallet. Getting it there from another chain is Circle's bridge (CCTP), not part of this project.
 
 **Build your own in 60 seconds:** *New order* → payee, amount, interval, tip → **Create** (the reserve is quoted from the latest base fee) → the order card opens Due → **Execute**.
