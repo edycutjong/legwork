@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Legwork — a torn receipt on which an ink stride walks the payment out and a copper stroke returns the exact gas to whoever ran it">
+  <defs>
+    <linearGradient id="copper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="var(--accent, #A4471A)"/>
+      <stop offset="100%" stop-color="#7A3410"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="var(--primary, #1C1A16)" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <!-- the receipt: paper plate with a torn bottom edge (its own plate — reads on white and on dark GitHub) -->
+  <path id="receipt" filter="url(#soft)"
+        d="M108 40 H404 Q440 40 440 76 V434 L417 456 L394 434 L371 456 L348 434 L325 456 L302 434 L279 456 L256 434 L233 456 L210 434 L187 456 L164 434 L141 456 L118 434 L95 456 L72 434 V76 Q72 40 108 40 Z"
+        fill="#FFFDF8" stroke="var(--primary, #1C1A16)" stroke-width="14" stroke-linejoin="round"/>
+  <!-- receipt lines (dotted leaders) -->
+  <g stroke="#D8D0BE" stroke-width="4" stroke-dasharray="1 10" stroke-linecap="round">
+    <line x1="120" y1="360" x2="392" y2="360"/>
+    <line x1="120" y1="396" x2="392" y2="396"/>
+  </g>
+  <!-- the stride: an ink leg walking the payment out, left to right -->
+  <path id="stride" d="M148 300 L220 176 L284 248 L362 140"
+        fill="none" stroke="var(--primary, #1C1A16)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- the return: copper gas coming back to exactly where the stride began -->
+  <path id="return" d="M362 140 C446 214 418 322 300 326 C232 328 186 318 158 300"
+        fill="none" stroke="url(#copper)" stroke-width="22" stroke-linecap="round"/>
+  <path d="M190 268 L148 300 L196 318" fill="none" stroke="url(#copper)" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- the meter tick: metered = used -->
+  <g stroke="var(--accent, #A4471A)" stroke-width="10" stroke-linecap="round">
+    <line x1="300" y1="386" x2="392" y2="386"/>
+    <line x1="300" y1="406" x2="392" y2="406"/>
+  </g>
+</svg>
