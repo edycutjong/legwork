@@ -156,8 +156,10 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
     const now = BigInt(Math.floor(Date.now() / 1000));
     const st = orderStatus(order, hd.basefee, now);
     const cd = card.querySelector('.countdown');
-    const wasDue = card.querySelector('.badge')?.textContent === 'DUE';
-    if (st === 'Due' && !wasDue) { drawCard(); return; }
+    // badge() renders the status upper-cased; any status the card does not show yet is a redraw — into Due when the
+    // clock reaches nextDue, out of Due when a base-fee move (read by the 15 s tick below) makes the deposit short
+    const shown = (card.querySelector('.badge')?.textContent ?? '').trim();
+    if (shown !== st.toUpperCase()) { drawCard(); return; }
     if (cd && st === 'Waiting') cd.textContent = countdown(Number(order.nextDue - now));
   }, 1000);
   offWallet = onWallet(() => drawCard());
@@ -173,10 +175,11 @@ export async function renderOrder(root: HTMLElement, id: bigint, opts: { tx?: `0
       if (busy) return;
       hd = hd2; // the base fee feeds needed/cap on the next redraw; the countdown tick reads it too
       if (!changed(order, o)) return;
+      const ran = o.nextDue !== order.nextDue || o.paused !== order.paused; // an execute or a pause emits a log; a top-up does not
       order = o;
       if (order.payer === ZERO) { await refresh(); return; }
       drawCard();
-      loadRuns(true); // a run by someone else belongs in the table
+      if (ran) loadRuns(true); // a run by someone else belongs in the table
     } catch { /* transient RPC failure: the card keeps its last good read; the next tick tries again */ }
   }, 15_000);
   window.addEventListener('hashchange', () => { if (timer) clearInterval(timer); if (slowTimer) clearInterval(slowTimer); offWallet(); }, { once: true });
