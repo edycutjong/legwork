@@ -25,9 +25,12 @@ test.describe('smoke', () => {
     const raw = await (await request.get('/')).text();
     await page.goto('/');
     await expect(page.getByRole('heading', { name: 'New order' })).toBeVisible(); // renderHome has replaced the shell content
-    const rendered = await page.locator('main .hero h1').innerText();
+    // textContent, whitespace-collapsed, on both sides: innerText depends on layout (a block-level span injects a newline in the
+    // rendered heading but not in an unstyled detached copy), and the comparison is about words, not layout.
+    const norm = (t: string) => t.replace(/\s+/g, ' ').trim();
+    const rendered = norm(await page.locator('main .hero h1').evaluate((el) => el.textContent ?? ''));
     const staticHtml = /<h1 id="claim">([\s\S]*?)<\/h1>/.exec(raw)?.[1] ?? '';
-    const staticText = await page.evaluate((html) => { const d = document.createElement('div'); d.innerHTML = html; return d.innerText; }, staticHtml);
+    const staticText = norm(await page.evaluate((html) => { const d = document.createElement('div'); d.innerHTML = html; return d.textContent ?? ''; }, staticHtml));
     expect(staticText).toBe(rendered);
     expect(await page.locator('main [data-static]').count()).toBe(0);
   });
