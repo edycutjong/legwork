@@ -36,6 +36,14 @@
 
 ---
 
+**In three lines**
+
+- **Problem:** a recurring USDC payment on any other EVM chain needs a keeper network, a price oracle, or a cron box you run yourself — because the gas (ETH) and the payment (an ERC-20) are different money, so nobody can be repaid exactly for running it.
+- **On Arc:** the gas *is* USDC. `execute` meters its own gas and repays whoever called it, plus the payer's tip, out of the order's deposit, in the same transaction — arithmetic, not an oracle. One contract, no server, anyone can run it.
+- **Proof:** [`0x8E2F…1ccb`](https://explorer.arc.io/address/0x8E2F8AFC29e9dc127103CD6AD5BCfBe661141ccb) on Arc mainnet · 30 of 30 executes: drift 0 gas, refund ÷ real fee 1.000000 · 47 Foundry + 36 vitest + 20,000 property cases · on-chain bytecode == `forge build` · `npm run recheck` recomputes every receipt.
+
+---
+
 ## 📸 See it in Action
 
 <div align="center">
@@ -204,46 +212,7 @@ shares, not an Arc feature; the recheck's price equality is the guard that would
 | Deposits leak or are double-spent | impossible by invariant: Σ open deposits == contract balance under any interleaving | `invariant_I1_depositConservation` (64 runs × depth 32) |
 | The payee is runtime-blocklisted | the same pause path — Arc lets a native transfer revert "even when the sender has sufficient balance" | tested by construction; we hold no address the protocol refuses to pay |
 
-### Honest limits (9)
-
-1. The metering constant is per call shape and per client version; an opcode repricing would need a redeploy (constructor argument).
-2. The drift bound holds for executors that are plain accounts. A contract executor's own code — its call into `execute`, its
-   `receive` — runs outside the window and pays for itself; the one thing it shares with the transaction, the 21,000 intrinsic,
-   is credited once per transaction (since v2).
-3. The "real fee" on the page is derived from the receipt because Arc does not log gas deductions — which is exactly why it is
-   printed *beside* the contract's number rather than asserted by it.
-4. A contract payee must accept native USDC within a 30,000-gas stipend; one that needs more is paused on every run. A payer that
-   is a contract refusing USDC back can never cancel. Both are the caller's own construction.
-5. Executors are "anyone" in principle and two wallets in practice: the page button and the bench script, plus the demo payee
-   collecting its own payment. Nobody else runs orders yet.
-6. All bench rows sit at a 20 Gwei base fee — the only base fee Arc showed that day — so the `2 × basefee` cap is exercised by
-   tests and the `capped` receipt, not by the bench.
-7. The page has exactly one external dependency, the public Arc RPC (anonymous, CORS-enabled today; documented as "permissioned") —
-   no fonts, no analytics, no CDN; the contract has none. The RPC occasionally answers HTTP 429 to the history scan; requests are
-   paced 400 ms apart and viem retries the rest. Explorer source verification was not attempted (its API is behind a challenge page); the runtime-bytecode
-   identity check in `scripts/preflight.py --bytecode` is the substitute.
-8. The contract's `status` / `needed` / `priceCap` views read `block.basefee`. An `eth_call` sent without a gas price is simulated at
-   base fee 0 on Arc's RPC (geth behaviour), so from `cast call` they report a reserve of 0 and a cap of 0 unless `--gas-price` is
-   given; `execute` itself always sees the real base fee. The page does not use those views — it computes the same arithmetic from
-   the block's `baseFeePerGas` (`src/lib/orders.ts`), which is what the tests cover.
-9. Left out on purpose: a paymaster (the order already repays the executor — sponsoring its gas would pay twice), batched
-   execution (one order per transaction is what keeps the metering exact), and a server of any kind.
-
-### Corrections
-
-- 2026-09-18 — **v1 → v2.** The second audit round found that the intrinsic 21,000 was credited on every `execute` call, so a contract
-  executor batching K orders in one transaction was over-refunded 21,000 × (K − 1) gas — bounded by each order's reserve, never
-  exploited, but not "exact". v2 credits it once per transaction (transient flag). v1
-  [`0x68a92aF2Be2e6A640a19508a0fe44cbc8B2C62E2`](https://explorer.arc.io/address/0x68a92aF2Be2e6A640a19508a0fe44cbc8B2C62E2) had its demo orders cancelled and holds 0; its 36 execute receipts (same drift picture: 0 / −6) stay in `proof/receipts/` and are rechecked. Same `OVERHEAD`: the change is inside the measured window.
-- 2026-09-18 — `OVERHEAD` estimate 31,400 → measured **32,503** (three calibration runs, drift 1,103, spread 0). The wrong number
-  stays visible in `deploy/arc-mainnet.json` and in the three calibration receipts.
-- 2026-09-18 — the paused branch meters 6 gas *over* (`gasUsed` 60,180 vs `gasMetered` 60,186): the executor is over-refunded by
-  120 Gwei ≈ $0.0000001 on a refused payment. Inside the gate; left as is.
-- 2026-09-18 — a bench run intended as a `NotDue` demonstration landed as a normal 31st execute on v1 (a second had passed on a
-  1-second order). The revert was reproduced on a 1-hour order instead, on v1 and on v2; the extra receipt is kept and rechecked, not counted.
-- 2026-09-19 — the page's history scan read the newest 8 × 9,000 blocks only (≈ 10 h at Arc's ≈ 2 blocks/s), so a seeded order's
-  day-one runs vanished from *Recent runs* by the next day. Found by the post-build review; the scan now reads from both ends of the
-  order's life (`src/lib/scan.ts`).
+The nine limits and the corrections log are kept in [What we do not claim](#-what-we-do-not-claim), below the roadmap.
 
 ---
 
@@ -356,6 +325,53 @@ The next 6–8 weeks are about making the mechanism *reusable* and *run by someo
 | 4 | **One question for Arc office hours**: `tx.gasprice == effectiveGasPrice` is what makes the refund exact (`docs/FRICTION-LOG.md`) — is that guaranteed by the stable-fee design or an artefact of today's sequencer? | the identity every receipt depends on is confirmed as a commitment or the modifier grows a guard | a written answer linked from this README |
 
 Not on the list, on purpose: a keeper network, a token, an oracle. The point of the project is that Arc makes them unnecessary.
+
+---
+
+## 🩹 What we do not claim
+
+Kept here rather than edited away — every number above was measured; these are the edges of what the measurements cover, and the log of what the audits changed.
+
+### Honest limits (9)
+
+1. The metering constant is per call shape and per client version; an opcode repricing would need a redeploy (constructor argument).
+2. The drift bound holds for executors that are plain accounts. A contract executor's own code — its call into `execute`, its
+   `receive` — runs outside the window and pays for itself; the one thing it shares with the transaction, the 21,000 intrinsic,
+   is credited once per transaction (since v2).
+3. The "real fee" on the page is derived from the receipt because Arc does not log gas deductions — which is exactly why it is
+   printed *beside* the contract's number rather than asserted by it.
+4. A contract payee must accept native USDC within a 30,000-gas stipend; one that needs more is paused on every run. A payer that
+   is a contract refusing USDC back can never cancel. Both are the caller's own construction.
+5. Executors are "anyone" in principle and two wallets in practice: the page button and the bench script, plus the demo payee
+   collecting its own payment. Nobody else runs orders yet.
+6. All bench rows sit at a 20 Gwei base fee — the only base fee Arc showed that day — so the `2 × basefee` cap is exercised by
+   tests and the `capped` receipt, not by the bench.
+7. The page has exactly one external dependency, the public Arc RPC (anonymous, CORS-enabled today; documented as "permissioned") —
+   no fonts, no analytics, no CDN; the contract has none. The RPC occasionally answers HTTP 429 to the history scan; requests are
+   paced 400 ms apart and viem retries the rest. Explorer source verification was not attempted (its API is behind a challenge page); the runtime-bytecode
+   identity check in `scripts/preflight.py --bytecode` is the substitute.
+8. The contract's `status` / `needed` / `priceCap` views read `block.basefee`. An `eth_call` sent without a gas price is simulated at
+   base fee 0 on Arc's RPC (geth behaviour), so from `cast call` they report a reserve of 0 and a cap of 0 unless `--gas-price` is
+   given; `execute` itself always sees the real base fee. The page does not use those views — it computes the same arithmetic from
+   the block's `baseFeePerGas` (`src/lib/orders.ts`), which is what the tests cover.
+9. Left out on purpose: a paymaster (the order already repays the executor — sponsoring its gas would pay twice), batched
+   execution (one order per transaction is what keeps the metering exact), and a server of any kind.
+
+### Corrections
+
+- 2026-09-18 — **v1 → v2.** The second audit round found that the intrinsic 21,000 was credited on every `execute` call, so a contract
+  executor batching K orders in one transaction was over-refunded 21,000 × (K − 1) gas — bounded by each order's reserve, never
+  exploited, but not "exact". v2 credits it once per transaction (transient flag). v1
+  [`0x68a92aF2Be2e6A640a19508a0fe44cbc8B2C62E2`](https://explorer.arc.io/address/0x68a92aF2Be2e6A640a19508a0fe44cbc8B2C62E2) had its demo orders cancelled and holds 0; its 36 execute receipts (same drift picture: 0 / −6) stay in `proof/receipts/` and are rechecked. Same `OVERHEAD`: the change is inside the measured window.
+- 2026-09-18 — `OVERHEAD` estimate 31,400 → measured **32,503** (three calibration runs, drift 1,103, spread 0). The wrong number
+  stays visible in `deploy/arc-mainnet.json` and in the three calibration receipts.
+- 2026-09-18 — the paused branch meters 6 gas *over* (`gasUsed` 60,180 vs `gasMetered` 60,186): the executor is over-refunded by
+  120 Gwei ≈ $0.0000001 on a refused payment. Inside the gate; left as is.
+- 2026-09-18 — a bench run intended as a `NotDue` demonstration landed as a normal 31st execute on v1 (a second had passed on a
+  1-second order). The revert was reproduced on a 1-hour order instead, on v1 and on v2; the extra receipt is kept and rechecked, not counted.
+- 2026-09-19 — the page's history scan read the newest 8 × 9,000 blocks only (≈ 10 h at Arc's ≈ 2 blocks/s), so a seeded order's
+  day-one runs vanished from *Recent runs* by the next day. Found by the post-build review; the scan now reads from both ends of the
+  order's life (`src/lib/scan.ts`).
 
 ---
 
